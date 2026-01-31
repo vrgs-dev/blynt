@@ -24,46 +24,48 @@ export function UserMenu() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Avatar className='size-10 rounded-lg cursor-pointer'>
-                    <AvatarFallback className='rounded-lg bg-primary/10 text-primary text-xs font-semibold'>
-                        {userMenu.initials}
-                    </AvatarFallback>
-                </Avatar>
+                <button className='group shrink-0'>
+                    <Avatar className='shadow-[2px_2px_0px_0px] shadow-foreground/5 group-hover:shadow-[3px_3px_0px_0px] group-hover:shadow-foreground/10 border-2 border-border rounded-xl size-9 sm:size-10 transition-all group-hover:-translate-x-px group-hover:-translate-y-px cursor-pointer'>
+                        <AvatarFallback className='bg-linear-to-br from-primary/20 to-primary/10 border border-primary/20 rounded-xl font-bold text-primary text-xs'>
+                            {userMenu.initials}
+                        </AvatarFallback>
+                    </Avatar>
+                </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                side='top'
+                side='bottom'
                 align='end'
-                className='w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg'
+                className='shadow-[3px_3px_0px_0px] shadow-foreground/10 p-2 border-2 border-border rounded-xl w-64'
             >
                 <DropdownMenuLabel className='p-0 font-normal'>
-                    <div className='flex items-center gap-2 px-1 py-1.5 text-sm'>
-                        <Avatar className='size-8 rounded-lg'>
-                            <AvatarFallback className='rounded-lg bg-primary/10 text-primary'>
+                    <div className='flex items-center gap-3 bg-muted/50 p-2 rounded-lg'>
+                        <Avatar className='shadow-sm border-2 border-border/50 rounded-lg size-10'>
+                            <AvatarFallback className='bg-linear-to-br from-primary/20 to-primary/10 rounded-lg font-bold text-primary text-sm'>
                                 {userMenu.initials}
                             </AvatarFallback>
                         </Avatar>
-                        <div className='grid flex-1 leading-tight'>
-                            <span className='truncate font-semibold'>{userMenu.name}</span>
-                            <span className='truncate text-xs text-muted-foreground'>{userMenu.email}</span>
+                        <div className='flex-1 min-w-0'>
+                            <p className='font-bold text-foreground text-sm truncate'>{userMenu.name}</p>
+                            <p className='text-muted-foreground text-xs truncate'>{userMenu.email}</p>
                         </div>
                     </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
+                <DropdownMenuSeparator className='my-2' />
+                <DropdownMenuItem asChild className='rounded-lg font-semibold'>
                     <Link href='/profile'>
-                        <User className='size-4 mr-2 hover:text-white' />
+                        <User className='size-4' />
                         Profile
                     </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild className='rounded-lg font-semibold'>
                     <Link href='/settings'>
-                        <Settings className='size-4 mr-2 hover:text-white' />
+                        <Settings className='size-4' />
                         Settings
                     </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className='text-destructive hover:text-white'>
-                    <LogOut className='size-4 mr-2 hover:text-white' />
+                <DropdownMenuSeparator className='my-2' />
+                <DropdownMenuItem className='focus:bg-destructive/10 rounded-lg font-semibold text-destructive focus:text-destructive'>
+                    <LogOut className='size-4' />
                     Log out
                 </DropdownMenuItem>
             </DropdownMenuContent>

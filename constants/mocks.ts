@@ -1,4 +1,5 @@
-import type { BudgetItem, Transaction } from '@/app/(app)/_components/dashboard/types';
+import type { BudgetItem } from '@/app/(app)/_components/dashboard/types';
+import type { Transaction } from '@/types/transaction';
 
 export const MOCK_TRANSACTIONS: Transaction[] = [
     {
@@ -6,7 +7,7 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
         amount: 4.5,
         currency: 'USD',
         category: 'Food',
-        merchant: 'Coffee Shop',
+        description: 'Coffee Shop',
         date: new Date().toISOString().split('T')[0],
         type: 'expense',
     },
@@ -15,7 +16,7 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
         amount: 3500,
         currency: 'USD',
         category: 'Salary',
-        merchant: 'Salary Deposit',
+        description: 'Salary Deposit',
         date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
         type: 'income',
     },
@@ -24,7 +25,7 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
         amount: 87.32,
         currency: 'USD',
         category: 'Food',
-        merchant: 'Grocery Store',
+        description: 'Grocery Store',
         date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
         type: 'expense',
     },
@@ -33,7 +34,7 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
         amount: 15.99,
         currency: 'USD',
         category: 'Entertainment',
-        merchant: 'Netflix Subscription',
+        description: 'Netflix Subscription',
         date: new Date(Date.now() - 86400000 * 3).toISOString().split('T')[0],
         type: 'expense',
     },
@@ -42,7 +43,7 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
         amount: 45.0,
         currency: 'USD',
         category: 'Transport',
-        merchant: 'Shell Gas Station',
+        description: 'Shell Gas Station',
         date: new Date(Date.now() - 86400000 * 4).toISOString().split('T')[0],
         type: 'expense',
     },

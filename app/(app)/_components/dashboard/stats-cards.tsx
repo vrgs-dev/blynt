@@ -2,6 +2,7 @@
 
 import { TrendingUp, TrendingDown, Wallet, ArrowUpCircle, ArrowDownCircle, PiggyBank } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StatCardProps {
     title: string;
@@ -74,9 +75,21 @@ interface StatsGridProps {
         expenses: { value: string; change: string; isPositive: boolean };
         savings: { value: string; change: string; isPositive: boolean };
     };
+    isLoading?: boolean;
 }
 
-export function StatsGrid({ stats }: StatsGridProps) {
+export function StatsGrid({ stats, isLoading }: StatsGridProps) {
+    if (isLoading) {
+        return (
+            <div className='grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4'>
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+            </div>
+        );
+    }
+
     return (
         <div className='grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4'>
             <StatCard
@@ -107,6 +120,25 @@ export function StatsGrid({ stats }: StatsGridProps) {
                 isPositive={stats.savings.isPositive}
                 icon='savings'
             />
+        </div>
+    );
+}
+
+function StatCardSkeleton() {
+    return (
+        <div className='bg-card border-2 border-border rounded-2xl p-4 sm:p-5 shadow-[3px_3px_0px_0px] shadow-foreground/5'>
+            <div className='flex items-start justify-between gap-2 mb-3'>
+                <Skeleton className='h-3.5 sm:h-4 w-24 sm:w-28' />
+                <Skeleton className='size-8 sm:size-9 rounded-lg' />
+            </div>
+
+            <Skeleton className='h-7 sm:h-9 md:h-10 w-28 sm:w-36 md:w-40 mb-1' />
+
+            <div className='flex items-center gap-1.5'>
+                <Skeleton className='size-3.5 rounded-full' />
+                <Skeleton className='h-3 sm:h-3.5 w-12 sm:w-14' />
+                <Skeleton className='h-3 sm:h-3.5 w-20 sm:w-24' />
+            </div>
         </div>
     );
 }

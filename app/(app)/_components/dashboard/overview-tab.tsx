@@ -1,31 +1,70 @@
 'use client';
 
-import { useState } from 'react';
 import { InputParse } from './input-parse';
 import { StatsGrid } from './stats-cards';
 import { BudgetOverview } from './budget-overview';
-import { RecentActivity } from './recent-activity';
+import { TransactionList } from './transaction-list';
 import type { Transaction } from '@/types/transaction';
-import { MOCK_STATS, MOCK_TRANSACTIONS, MOCK_BUDGETS } from '@/constants/mocks';
+import { useCreateTransaction, useBudget, useOverview } from '@/lib/api/hooks/use-transaction';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getTransactions } from '@/lib/api/transaction';
 
 export function OverviewTab() {
-    const [transactions, setTransactions] = useState<Transaction[]>(MOCK_TRANSACTIONS);
+    const queryClient = useQueryClient();
 
-    const handleAddExpense = (transaction: Transaction) => {
-        setTransactions((prev) => [transaction, ...prev]);
+    const { data: transactionsData, isLoading: isLoadingTransactions } = useQuery({
+        queryKey: ['transactions'],
+        queryFn: () => getTransactions({ limit: 5, offset: 0 }),
+    });
+
+    const { data: budgetData, isLoading: isLoadingBudget } = useBudget();
+    const { data: overviewData, isLoading: isLoadingOverview } = useOverview();
+
+    const { mutate: createTransaction } = useCreateTransaction({
+        onSuccess: async (data) => {
+            console.log('Transaction created:', data);
+            await queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            await queryClient.invalidateQueries({ queryKey: ['budget'] });
+            await queryClient.invalidateQueries({ queryKey: ['overview'] });
+            await queryClient.refetchQueries({ queryKey: ['transactions'] });
+        },
+        onError: (error) => {
+            console.error('Error creating transaction:', error);
+        },
+    });
+
+    const handleAddExpense = (transaction: Transaction, rawInput: string) => {
+        createTransaction({
+            transactions: [transaction],
+            rawInput: rawInput,
+        });
     };
 
     return (
         <div className='space-y-4 sm:space-y-6'>
             {/* Stats Grid */}
-            <StatsGrid stats={MOCK_STATS} />
+            <StatsGrid
+                stats={
+                    overviewData?.stats ?? {
+                        balance: { value: '$0.00', change: '0.0%', isPositive: true },
+                        income: { value: '$0.00', change: '0.0%', isPositive: true },
+                        expenses: { value: '$0.00', change: '0.0%', isPositive: true },
+                        savings: { value: '$0.00', change: '0.0%', isPositive: true },
+                    }
+                }
+                isLoading={isLoadingOverview}
+            />
 
             {/* Natural Language Input */}
             <InputParse onAdd={handleAddExpense} />
 
             <div className='gap-4 sm:gap-6 grid lg:grid-cols-2'>
-                <RecentActivity transactions={transactions} limit={5} />
-                <BudgetOverview budgets={MOCK_BUDGETS} />
+                <TransactionList
+                    transactions={transactionsData?.transactions ?? []}
+                    title='Recent Transactions'
+                    isLoading={isLoadingTransactions}
+                />
+                <BudgetOverview budgets={budgetData?.budgets ?? []} isLoading={isLoadingBudget} />
             </div>
         </div>
     );

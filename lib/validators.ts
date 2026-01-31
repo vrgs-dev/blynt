@@ -1,23 +1,26 @@
 import { z } from 'zod';
 import { ParsedResponse } from '@/services/types';
 
-const TransactionSchema = z.object({
+export const transactionSchema = z.object({
     type: z.enum(['income', 'expense']),
-    amount: z.number().positive().finite(),
-    currency: z.string().length(3).toUpperCase(),
+    amount: z.number().positive().min(0.01),
+    currency: z.string().length(3).toUpperCase().default('USD'),
     category: z.string().min(1).max(50),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .default(new Date().toISOString().split('T')[0]),
     description: z.string().min(1).max(500),
 });
 
-const ParsedResponseSchema = z.union([
-    z.object({ transaction: TransactionSchema }),
-    z.object({ transactions: z.array(TransactionSchema).min(1).max(10) }),
+const parsedResponseSchema = z.union([
+    z.object({ transaction: transactionSchema }),
+    z.object({ transactions: z.array(transactionSchema).min(1).max(10) }),
 ]);
 
 export function validateTransactionOutput(response: ParsedResponse): ParsedResponse {
     try {
-        return ParsedResponseSchema.parse(response);
+        return parsedResponseSchema.parse(response);
     } catch (error) {
         if (error instanceof z.ZodError) {
             // @ts-expect-error - ZodError has an errors property

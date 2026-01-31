@@ -29,7 +29,7 @@ import { CATEGORIES, CATEGORY_COLORS } from '@/constants/category';
 import { Transaction } from '@/types/transaction';
 
 interface TransactionInputProps {
-    onAdd: (transaction: Transaction) => void;
+    onAdd: (transaction: Transaction, rawInput: string) => void;
 }
 
 /**
@@ -83,7 +83,7 @@ export function InputParse({ onAdd }: TransactionInputProps) {
         }
     }, [showSuccess]);
 
-    const handleParse = (e?: React.FormEvent) => {
+    const handleParse = (e?: React.SubmitEvent) => {
         if (e) e.preventDefault();
         if (!input.trim() || isParsing) return;
 
@@ -95,14 +95,7 @@ export function InputParse({ onAdd }: TransactionInputProps) {
     const handleConfirmCurrent = () => {
         if (!currentTransaction) return;
 
-        onAdd({
-            amount: currentTransaction.amount,
-            category: currentTransaction.category,
-            description: currentTransaction.description,
-            date: currentTransaction.date,
-            type: currentTransaction.type,
-            currency: currentTransaction.currency,
-        });
+        onAdd(currentTransaction, input);
 
         // Remove current and move to next
         const remaining = pendingTransactions.filter((_, i) => i !== currentIndex);
@@ -119,14 +112,7 @@ export function InputParse({ onAdd }: TransactionInputProps) {
 
     const handleConfirmAll = () => {
         pendingTransactions.forEach((tx) => {
-            onAdd({
-                amount: tx.amount,
-                category: tx.category,
-                description: tx.description,
-                date: tx.date,
-                type: tx.type,
-                currency: tx.currency,
-            });
+            onAdd(tx, input);
         });
 
         setSuccessCount(pendingTransactions.length);

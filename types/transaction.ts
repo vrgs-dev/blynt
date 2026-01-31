@@ -9,3 +9,20 @@ export interface Transaction {
     date: string;
     description: string;
 }
+
+export interface TransactionFilters {
+    startDate?: string;
+    endDate?: string;
+    category?: string;
+    type?: TransactionType;
+    search?: string;
+    limit?: number;
+    offset?: number;
+}
+
+export interface GetTransactionsResponse {
+    transactions: Transaction[];
+    total: number;
+    limit: number;
+    offset: number;
+}

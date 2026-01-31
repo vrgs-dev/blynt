@@ -1,4 +1,3 @@
-import { Category } from '@/types/category';
 import { LucideIcon } from 'lucide-react';
 
 export const DASHBOARD_TABS = ['overview', 'transactions', 'calendar'] as const;
@@ -14,7 +13,7 @@ export interface DashboardTabConfig {
 }
 
 export interface BudgetItem {
-    category: Category;
+    category: string;
     spent: number;
     limit: number;
 }

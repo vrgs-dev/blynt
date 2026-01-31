@@ -12,18 +12,22 @@ import {
     HelpCircle,
     Sparkles,
     Clock,
+    Pencil,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Transaction } from '@/types/transaction';
 import { Category } from '@/types/category';
 import { formatDate } from '@/lib/date';
 import { CATEGORY_COLORS } from '@/constants/category';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ExpenseListProps {
     transactions: Transaction[];
+    onEdit?: (transaction: Transaction) => void;
     onDelete?: (id: string) => void;
     title?: string;
     showEmpty?: boolean;
+    isLoading?: boolean;
 }
 
 const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
@@ -37,7 +41,18 @@ const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
     Other: <HelpCircle className='size-5' />,
 };
 
-export function TransactionList({ transactions, onDelete, title, showEmpty = true }: ExpenseListProps) {
+export function TransactionList({
+    transactions,
+    onEdit,
+    onDelete,
+    title,
+    showEmpty = true,
+    isLoading,
+}: ExpenseListProps) {
+    if (isLoading) {
+        return <LoadingState title={title} />;
+    }
+
     if (transactions.length === 0 && showEmpty) {
         return <EmptyState />;
     }
@@ -55,6 +70,7 @@ export function TransactionList({ transactions, onDelete, title, showEmpty = tru
                         <TransactionRow
                             key={transaction.id}
                             transaction={transaction}
+                            onEdit={onEdit}
                             onDelete={onDelete}
                             isFirst={index === 0}
                             isLast={index === transactions.length - 1}
@@ -68,12 +84,13 @@ export function TransactionList({ transactions, onDelete, title, showEmpty = tru
 
 interface TransactionRowProps {
     transaction: Transaction;
+    onEdit?: (transaction: Transaction) => void;
     onDelete?: (id: string) => void;
     isFirst?: boolean;
     isLast?: boolean;
 }
 
-function TransactionRow({ transaction, onDelete }: TransactionRowProps) {
+function TransactionRow({ transaction, onEdit, onDelete }: TransactionRowProps) {
     const styles = CATEGORY_COLORS[transaction.category as Category] || CATEGORY_COLORS.Other;
     const icon = CATEGORY_ICONS[transaction.category as Category] || CATEGORY_ICONS.Other;
 
@@ -116,7 +133,7 @@ function TransactionRow({ transaction, onDelete }: TransactionRowProps) {
             </div>
 
             {/* Amount & Actions */}
-            <div className='flex items-center gap-2 sm:gap-4 shrink-0'>
+            <div className='flex items-center gap-2 sm:gap-3 shrink-0'>
                 <div className='text-right'>
                     <p
                         className={cn(
@@ -134,15 +151,26 @@ function TransactionRow({ transaction, onDelete }: TransactionRowProps) {
                     )}
                 </div>
 
-                {onDelete && (
-                    <button
-                        onClick={() => onDelete(transaction.id ?? 'unknown')}
-                        className='hover:bg-destructive/10 opacity-0 focus:opacity-100 group-hover:opacity-100 p-2 rounded-lg text-muted-foreground/50 hover:text-destructive transition-all'
-                        aria-label='Delete transaction'
-                    >
-                        <Trash2 className='size-4' />
-                    </button>
-                )}
+                <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity'>
+                    {onEdit && (
+                        <button
+                            onClick={() => onEdit(transaction)}
+                            className='hover:bg-primary/10 p-2 rounded-lg text-muted-foreground/50 hover:text-primary transition-all'
+                            aria-label='Edit transaction'
+                        >
+                            <Pencil className='size-4' />
+                        </button>
+                    )}
+                    {onDelete && (
+                        <button
+                            onClick={() => onDelete(transaction.id ?? 'unknown')}
+                            className='hover:bg-destructive/10 p-2 rounded-lg text-muted-foreground/50 hover:text-destructive transition-all'
+                            aria-label='Delete transaction'
+                        >
+                            <Trash2 className='size-4' />
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -150,7 +178,7 @@ function TransactionRow({ transaction, onDelete }: TransactionRowProps) {
 
 function EmptyState() {
     return (
-        <div className='flex flex-col items-center bg-card p-8 sm:p-12 border-2 border-border border-dashed rounded-2xl text-center animate-in duration-500 fade-in'>
+        <div className='flex flex-col items-center bg-card p-8 sm:p-10 border-2 border-border border-dashed rounded-2xl text-center animate-in duration-500 fade-in'>
             {/* Animated Icon */}
             <div className='relative mb-6'>
                 <div className='absolute -inset-4 bg-primary/5 rounded-full animate-pulse' />
@@ -162,14 +190,50 @@ function EmptyState() {
 
             <h3 className='mb-2 font-bold text-foreground text-lg sm:text-xl'>Your journey starts here</h3>
             <p className='mb-6 max-w-sm text-muted-foreground text-sm sm:text-base leading-relaxed'>
-                Turn your natural thoughts into clear data. Try saying{' '}
+                Try typing{' '}
                 <span className='font-semibold text-primary italic'>&quot;Spent $15 on lunch today&quot;</span> to see
                 it in action.
             </p>
+        </div>
+    );
+}
 
-            <div className='flex items-center gap-2 bg-muted/50 px-4 py-2 border border-border rounded-full font-bold text-[10px] text-muted-foreground uppercase tracking-widest'>
-                <div className='bg-primary rounded-full size-1.5 animate-ping' />
-                Awaiting your first transaction
+function LoadingState({ title }: { title?: string }) {
+    return (
+        <div className='space-y-3'>
+            {title && <h3 className='px-1 font-bold text-foreground text-sm sm:text-base'>{title}</h3>}
+            <div className='bg-card shadow-[3px_3px_0px_0px] shadow-foreground/5 border-2 border-border rounded-2xl overflow-hidden'>
+                <div className='divide-y divide-border'>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                        <TransactionRowSkeleton key={index} />
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function TransactionRowSkeleton() {
+    return (
+        <div className='flex justify-between items-center p-3 sm:p-4'>
+            <div className='flex flex-1 items-center gap-3 sm:gap-4 min-w-0'>
+                {/* Category Icon Skeleton */}
+                <Skeleton className='rounded-xl w-12 sm:w-14 h-12 sm:h-14 shrink-0' />
+
+                {/* Details Skeleton */}
+                <div className='flex-1 space-y-2 min-w-0'>
+                    <Skeleton className='w-32 sm:w-40 h-4' />
+                    <div className='flex items-center gap-2'>
+                        <Skeleton className='w-20 h-3' />
+                        <Skeleton className='rounded-full size-1' />
+                        <Skeleton className='w-16 h-3' />
+                    </div>
+                </div>
+            </div>
+
+            {/* Amount Skeleton */}
+            <div className='text-right'>
+                <Skeleton className='mb-1 w-20 sm:w-24 h-5' />
             </div>
         </div>
     );
