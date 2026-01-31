@@ -9,6 +9,7 @@ import {
     CheckCircle2,
     X,
     ChevronRight,
+    ChevronLeft,
     Save,
     Calendar,
     Tag,
@@ -17,8 +18,13 @@ import {
     ArrowUpCircle,
     ArrowDownCircle,
     Zap,
+    Check,
+    Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useParseTransaction } from '@/lib/api/hooks';
+import type { NormalizedTransaction } from '@/lib/api';
+import { Transaction } from './types';
 
 // Types
 interface ParseResult {
@@ -26,24 +32,14 @@ interface ParseResult {
     category: Category;
     merchant: string;
     date: string;
-    isIncome: boolean;
-    note?: string;
-}
-
-interface Expense {
-    id: string;
-    amount: number;
-    category: Category;
-    merchant: string;
-    date: string;
-    isIncome: boolean;
+    type: boolean;
     note?: string;
 }
 
 type Category = 'Food' | 'Transport' | 'Utilities' | 'Entertainment' | 'Healthcare' | 'Shopping' | 'Salary' | 'Other';
 
 interface ExpenseInputProps {
-    onAdd: (expense: Omit<Expense, 'id'>) => void;
+    onAdd: (expense: Omit<Transaction, 'id' | 'currency'>) => void;
 }
 
 const CATEGORIES: Category[] = [
@@ -68,38 +64,49 @@ const CATEGORY_COLORS: Record<Category, { bg: string; text: string; border: stri
     Other: { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' },
 };
 
-// Mock API call - replace with actual implementation
-async function parseExpenseWithAI(input: string): Promise<ParseResult | null> {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    const amountMatch = input.match(/\$?(\d+(?:\.\d{2})?)/);
-    const amount = amountMatch ? parseFloat(amountMatch[1]) : 0;
-
-    const isIncome =
-        input.toLowerCase().includes('received') ||
-        input.toLowerCase().includes('salary') ||
-        input.toLowerCase().includes('income') ||
-        input.toLowerCase().includes('earned');
-
+/**
+ * Convert API response to component's ParseResult format
+ */
+function toParseResult(tx: NormalizedTransaction): ParseResult {
     return {
-        amount,
-        category: isIncome ? 'Salary' : 'Food',
-        merchant: 'Detected merchant',
-        date: new Date().toISOString().split('T')[0],
-        isIncome,
-        note: '',
+        amount: tx.amount,
+        category: (CATEGORIES.includes(tx.category as Category) ? tx.category : 'Other') as Category,
+        merchant: tx.merchant,
+        date: tx.date,
+        type: tx.type,
+        note: tx.note || '',
     };
 }
 
 export function InputParse({ onAdd }: ExpenseInputProps) {
     const [input, setInput] = useState('');
-    const [isParsing, setIsParsing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [successCount, setSuccessCount] = useState(0);
     const [lastTagApplied, setLastTagApplied] = useState<string | null>(null);
-    const [pendingTransaction, setPendingTransaction] = useState<ParseResult | null>(null);
+    const [pendingTransactions, setPendingTransactions] = useState<ParseResult[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const [isFocused, setIsFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const parseMutation = useParseTransaction({
+        onSuccess: (transactions) => {
+            if (transactions.length > 0) {
+                setPendingTransactions(transactions.map(toParseResult));
+                setCurrentIndex(0);
+                setError(null);
+            } else {
+                setError("Couldn't understand the details. Try: 'Spent $20 at Pizza Hut'");
+            }
+        },
+        onError: (err) => {
+            setError(err.message || 'Something went wrong. Please try again.');
+        },
+    });
+
+    const isParsing = parseMutation.isPending;
+    const currentTransaction = pendingTransactions[currentIndex];
+    const hasMultiple = pendingTransactions.length > 1;
 
     useEffect(() => {
         if (showSuccess) {
@@ -108,47 +115,71 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
         }
     }, [showSuccess]);
 
-    const handleParse = async (e?: React.FormEvent) => {
+    const handleParse = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         if (!input.trim() || isParsing) return;
 
-        setIsParsing(true);
         setError(null);
         setShowSuccess(false);
+        parseMutation.mutate({ input: input.trim() });
+    };
 
-        try {
-            const result = await parseExpenseWithAI(input);
-            if (result && result.amount > 0) {
-                setPendingTransaction(result);
-            } else {
-                setError("Couldn't understand the details. Try: 'Spent $20 at Pizza Hut'");
-            }
-        } catch {
-            setError('Something went wrong. Please try again.');
-        } finally {
-            setIsParsing(false);
+    const handleConfirmCurrent = () => {
+        if (!currentTransaction) return;
+
+        onAdd({
+            amount: currentTransaction.amount,
+            category: currentTransaction.category,
+            merchant: currentTransaction.merchant,
+            date: currentTransaction.date,
+            type: currentTransaction.type,
+            note: currentTransaction.note,
+        });
+
+        // Remove current and move to next
+        const remaining = pendingTransactions.filter((_, i) => i !== currentIndex);
+        if (remaining.length === 0) {
+            setPendingTransactions([]);
+            setInput('');
+            setSuccessCount(1);
+            setShowSuccess(true);
+        } else {
+            setPendingTransactions(remaining);
+            setCurrentIndex(Math.min(currentIndex, remaining.length - 1));
         }
     };
 
-    const handleConfirm = () => {
-        if (!pendingTransaction) return;
-
-        onAdd({
-            amount: pendingTransaction.amount,
-            category: pendingTransaction.category,
-            merchant: pendingTransaction.merchant,
-            date: pendingTransaction.date,
-            isIncome: pendingTransaction.isIncome,
-            note: pendingTransaction.note,
+    const handleConfirmAll = () => {
+        pendingTransactions.forEach((tx) => {
+            onAdd({
+                amount: tx.amount,
+                category: tx.category,
+                merchant: tx.merchant,
+                date: tx.date,
+                type: tx.type,
+                note: tx.note,
+            });
         });
 
-        setPendingTransaction(null);
+        setSuccessCount(pendingTransactions.length);
+        setPendingTransactions([]);
         setInput('');
         setShowSuccess(true);
     };
 
+    const handleRemoveCurrent = () => {
+        const remaining = pendingTransactions.filter((_, i) => i !== currentIndex);
+        if (remaining.length === 0) {
+            setPendingTransactions([]);
+        } else {
+            setPendingTransactions(remaining);
+            setCurrentIndex(Math.min(currentIndex, remaining.length - 1));
+        }
+    };
+
     const handleCancel = () => {
-        setPendingTransaction(null);
+        setPendingTransactions([]);
+        setCurrentIndex(0);
     };
 
     const handleQuickTag = (text: string) => {
@@ -158,13 +189,13 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
         setTimeout(() => setLastTagApplied(null), 600);
     };
 
-    const updatePending = (updates: Partial<ParseResult>) => {
-        if (!pendingTransaction) return;
-        setPendingTransaction({ ...pendingTransaction, ...updates });
+    const updateCurrent = (updates: Partial<ParseResult>) => {
+        if (!currentTransaction) return;
+        setPendingTransactions((prev) => prev.map((tx, i) => (i === currentIndex ? { ...tx, ...updates } : tx)));
     };
 
     // Confirmation view
-    if (pendingTransaction) {
+    if (currentTransaction) {
         return (
             <div className='slide-in-from-bottom-2 relative bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.08)] p-5 sm:p-6 border-2 border-foreground/10 rounded-2xl overflow-hidden transition-all animate-in duration-300 fade-in'>
                 {/* Decorative corner */}
@@ -181,9 +212,13 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                             <div className='-right-0.5 -bottom-0.5 absolute bg-primary border-2 border-card rounded-full size-3 animate-pulse' />
                         </div>
                         <div>
-                            <h3 className='font-bold text-foreground text-sm sm:text-base'>Confirm Transaction</h3>
+                            <h3 className='font-bold text-foreground text-sm sm:text-base'>
+                                {hasMultiple ? 'Review Transactions' : 'Confirm Transaction'}
+                            </h3>
                             <p className='font-semibold text-[10px] text-muted-foreground sm:text-xs uppercase tracking-widest'>
-                                Review the details
+                                {hasMultiple
+                                    ? `${currentIndex + 1} of ${pendingTransactions.length} detected`
+                                    : 'Review the details'}
                             </p>
                         </div>
                     </div>
@@ -195,19 +230,55 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                     </button>
                 </div>
 
+                {/* Navigation for multiple transactions */}
+                {hasMultiple && (
+                    <div className='relative flex justify-between items-center mb-4 px-1'>
+                        <button
+                            onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+                            disabled={currentIndex === 0}
+                            className='flex items-center gap-1 disabled:opacity-30 font-semibold text-muted-foreground hover:text-foreground text-xs transition-colors disabled:cursor-not-allowed'
+                        >
+                            <ChevronLeft className='size-4' />
+                            Prev
+                        </button>
+                        <div className='flex gap-1'>
+                            {pendingTransactions.map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setCurrentIndex(i)}
+                                    className={cn(
+                                        'rounded-full size-2 transition-all',
+                                        i === currentIndex
+                                            ? 'bg-primary scale-125'
+                                            : 'bg-muted-foreground/30 hover:bg-muted-foreground/50',
+                                    )}
+                                />
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setCurrentIndex((i) => Math.min(pendingTransactions.length - 1, i + 1))}
+                            disabled={currentIndex === pendingTransactions.length - 1}
+                            className='flex items-center gap-1 disabled:opacity-30 font-semibold text-muted-foreground hover:text-foreground text-xs transition-colors disabled:cursor-not-allowed'
+                        >
+                            Next
+                            <ChevronRight className='size-4' />
+                        </button>
+                    </div>
+                )}
+
                 <div className='relative space-y-4'>
                     {/* Amount & Type */}
                     <div className='flex items-center gap-3 sm:gap-4 bg-muted/30 p-3 sm:p-4 border-2 border-border rounded-xl'>
                         <button
-                            onClick={() => updatePending({ isIncome: !pendingTransaction.isIncome })}
+                            onClick={() => updateCurrent({ type: !currentTransaction.type })}
                             className={cn(
                                 'flex justify-center items-center border-2 rounded-xl size-12 sm:size-14 active:scale-95 transition-all duration-200 shrink-0',
-                                pendingTransaction.isIncome
+                                currentTransaction.type
                                     ? 'border-emerald-300 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
                                     : 'border-rose-300 bg-rose-50 text-rose-600 hover:bg-rose-100',
                             )}
                         >
-                            {pendingTransaction.isIncome ? (
+                            {currentTransaction.type ? (
                                 <ArrowUpCircle className='size-6 sm:size-7' />
                             ) : (
                                 <ArrowDownCircle className='size-6 sm:size-7' />
@@ -221,8 +292,8 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                                 <span className='font-bold text-muted-foreground text-lg sm:text-xl'>$</span>
                                 <input
                                     type='number'
-                                    value={pendingTransaction.amount}
-                                    onChange={(e) => updatePending({ amount: parseFloat(e.target.value) || 0 })}
+                                    value={currentTransaction.amount}
+                                    onChange={(e) => updateCurrent({ amount: parseFloat(e.target.value) || 0 })}
                                     className='bg-transparent outline-none w-full font-black text-foreground text-2xl sm:text-3xl tracking-tight'
                                     step='0.01'
                                 />
@@ -234,12 +305,12 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                     <div className='gap-3 sm:gap-4 grid grid-cols-1 sm:grid-cols-2'>
                         <div className='space-y-1.5'>
                             <label className='flex items-center gap-1.5 ml-1 font-bold text-[10px] text-muted-foreground uppercase tracking-wider'>
-                                <Store className='size-3' /> Merchant
+                                <Store className='size-3' /> Description
                             </label>
                             <input
                                 type='text'
-                                value={pendingTransaction.merchant}
-                                onChange={(e) => updatePending({ merchant: e.target.value })}
+                                value={currentTransaction.merchant}
+                                onChange={(e) => updateCurrent({ merchant: e.target.value })}
                                 className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-semibold text-foreground text-sm transition-all'
                             />
                         </div>
@@ -250,8 +321,8 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                             </label>
                             <input
                                 type='date'
-                                value={pendingTransaction.date}
-                                onChange={(e) => updatePending({ date: e.target.value })}
+                                value={currentTransaction.date}
+                                onChange={(e) => updateCurrent({ date: e.target.value })}
                                 className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-semibold text-foreground text-sm transition-all'
                             />
                         </div>
@@ -265,11 +336,11 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                         <div className='flex flex-wrap gap-1.5 sm:gap-2'>
                             {CATEGORIES.map((cat) => {
                                 const colors = CATEGORY_COLORS[cat];
-                                const isSelected = pendingTransaction.category === cat;
+                                const isSelected = currentTransaction.category === cat;
                                 return (
                                     <button
                                         key={cat}
-                                        onClick={() => updatePending({ category: cat })}
+                                        onClick={() => updateCurrent({ category: cat })}
                                         className={cn(
                                             'px-2.5 sm:px-3 py-1.5 border-2 rounded-lg font-bold text-[10px] sm:text-xs uppercase tracking-wide active:scale-95 transition-all duration-200',
                                             isSelected
@@ -291,8 +362,8 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                         </label>
                         <input
                             type='text'
-                            value={pendingTransaction.note || ''}
-                            onChange={(e) => updatePending({ note: e.target.value })}
+                            value={currentTransaction.note || ''}
+                            onChange={(e) => updateCurrent({ note: e.target.value })}
                             placeholder='Add a note...'
                             className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-medium text-foreground placeholder:text-muted-foreground/60 text-sm transition-all'
                         />
@@ -301,20 +372,48 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
 
                 {/* Actions */}
                 <div className='flex gap-2 sm:gap-3 mt-6'>
-                    <button
-                        onClick={handleCancel}
-                        className='flex-1 bg-muted/50 hover:bg-muted px-4 py-3 border-2 border-border rounded-xl font-bold text-muted-foreground text-sm active:scale-[0.98] transition-all'
-                    >
-                        Discard
-                    </button>
-                    <button
-                        onClick={handleConfirm}
-                        className='group flex flex-2 justify-center items-center gap-2 bg-primary shadow-[3px_3px_0px_0px] shadow-primary/30 hover:shadow-[1px_1px_0px_0px] hover:shadow-primary/30 active:shadow-none px-4 py-3 border-2 border-primary rounded-xl font-bold text-primary-foreground text-sm active:scale-[0.98] transition-all'
-                    >
-                        <Save className='size-4' />
-                        Save
-                        <ChevronRight className='size-4 transition-transform group-hover:translate-x-0.5' />
-                    </button>
+                    {hasMultiple ? (
+                        <>
+                            <button
+                                onClick={handleRemoveCurrent}
+                                className='flex justify-center items-center bg-muted/50 hover:bg-destructive/10 px-3 py-3 border-2 border-border hover:border-destructive/30 rounded-xl font-bold text-muted-foreground hover:text-destructive text-sm active:scale-[0.98] transition-all'
+                                title='Remove this transaction'
+                            >
+                                <Trash2 className='size-4' />
+                            </button>
+                            <button
+                                onClick={handleConfirmCurrent}
+                                className='flex flex-1 justify-center items-center gap-2 bg-muted/50 hover:bg-muted px-4 py-3 border-2 border-border rounded-xl font-bold text-foreground text-sm active:scale-[0.98] transition-all'
+                            >
+                                <Check className='size-4' />
+                                Save This
+                            </button>
+                            <button
+                                onClick={handleConfirmAll}
+                                className='group flex flex-1 justify-center items-center gap-2 bg-primary shadow-[3px_3px_0px_0px] shadow-primary/30 hover:shadow-[1px_1px_0px_0px] hover:shadow-primary/30 active:shadow-none px-4 py-3 border-2 border-primary rounded-xl font-bold text-primary-foreground text-sm active:scale-[0.98] transition-all'
+                            >
+                                <Save className='size-4' />
+                                Save All ({pendingTransactions.length})
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                onClick={handleCancel}
+                                className='flex-1 bg-muted/50 hover:bg-muted px-4 py-3 border-2 border-border rounded-xl font-bold text-muted-foreground text-sm active:scale-[0.98] transition-all'
+                            >
+                                Discard
+                            </button>
+                            <button
+                                onClick={handleConfirmCurrent}
+                                className='group flex flex-2 justify-center items-center gap-2 bg-primary shadow-[3px_3px_0px_0px] shadow-primary/30 hover:shadow-[1px_1px_0px_0px] hover:shadow-primary/30 active:shadow-none px-4 py-3 border-2 border-primary rounded-xl font-bold text-primary-foreground text-sm active:scale-[0.98] transition-all'
+                            >
+                                <Save className='size-4' />
+                                Save
+                                <ChevronRight className='size-4 transition-transform group-hover:translate-x-0.5' />
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         );
@@ -381,7 +480,7 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                         onChange={(e) => setInput(e.target.value)}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
-                        placeholder='E.g., Spent $45 at the grocery store today'
+                        placeholder='Spent $45 at grocery and $20 on gas'
                         className={cn(
                             'bg-transparent py-3.5 sm:py-4 pr-14 sm:pr-16 pl-4 sm:pl-5 outline-none w-full font-medium text-foreground placeholder:text-muted-foreground/60 text-sm sm:text-base',
                             isParsing && 'cursor-wait opacity-70',
@@ -425,7 +524,9 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                 {showSuccess && !error && (
                     <div className='flex items-center gap-2 slide-in-from-top-1 text-emerald-600 animate-in duration-200'>
                         <div className='bg-emerald-500 rounded-full size-1.5 animate-ping' />
-                        <span className='font-bold text-xs sm:text-sm'>Transaction added</span>
+                        <span className='font-bold text-xs sm:text-sm'>
+                            {successCount > 1 ? `${successCount} transactions added` : 'Transaction added'}
+                        </span>
                     </div>
                 )}
                 {isParsing && !error && (
