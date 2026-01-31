@@ -2,7 +2,7 @@
 
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Transaction } from './types';
+import type { Transaction } from '@/types/transaction';
 import { formatRelativeDate } from '@/lib/date';
 
 interface RecentActivityProps {
@@ -56,7 +56,9 @@ function ActivityRow({ transaction }: ActivityRowProps) {
 
                 {/* Details */}
                 <div className='flex-1 min-w-0'>
-                    <p className='font-semibold text-foreground text-xs sm:text-sm truncate'>{transaction.merchant}</p>
+                    <p className='font-semibold text-foreground text-xs sm:text-sm truncate'>
+                        {transaction.description}
+                    </p>
                     <p className='text-[10px] text-muted-foreground sm:text-xs'>
                         {formatRelativeDate(transaction.date)}
                     </p>

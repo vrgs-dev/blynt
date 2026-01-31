@@ -14,77 +14,45 @@ import {
     Calendar,
     Tag,
     Store,
-    PenLine,
     ArrowUpCircle,
     ArrowDownCircle,
     Zap,
     Check,
     Trash2,
+    DollarSign,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useParseTransaction } from '@/lib/api/hooks';
 import type { NormalizedTransaction } from '@/lib/api';
-import { Transaction } from './types';
+import type { Category } from '@/types/category';
+import { CATEGORIES, CATEGORY_COLORS } from '@/constants/category';
+import { Transaction } from '@/types/transaction';
 
-// Types
-interface ParseResult {
-    amount: number;
-    category: Category;
-    merchant: string;
-    date: string;
-    type: boolean;
-    note?: string;
+interface TransactionInputProps {
+    onAdd: (transaction: Transaction) => void;
 }
-
-type Category = 'Food' | 'Transport' | 'Utilities' | 'Entertainment' | 'Healthcare' | 'Shopping' | 'Salary' | 'Other';
-
-interface ExpenseInputProps {
-    onAdd: (expense: Omit<Transaction, 'id' | 'currency'>) => void;
-}
-
-const CATEGORIES: Category[] = [
-    'Food',
-    'Transport',
-    'Utilities',
-    'Entertainment',
-    'Healthcare',
-    'Shopping',
-    'Salary',
-    'Other',
-];
-
-const CATEGORY_COLORS: Record<Category, { bg: string; text: string; border: string }> = {
-    Food: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-    Transport: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-    Utilities: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-    Entertainment: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-    Healthcare: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
-    Shopping: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
-    Salary: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-    Other: { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' },
-};
 
 /**
  * Convert API response to component's ParseResult format
  */
-function toParseResult(tx: NormalizedTransaction): ParseResult {
+function toParseResult(tx: NormalizedTransaction): Transaction {
     return {
         amount: tx.amount,
         category: (CATEGORIES.includes(tx.category as Category) ? tx.category : 'Other') as Category,
-        merchant: tx.merchant,
+        description: tx.description || '',
         date: tx.date,
         type: tx.type,
-        note: tx.note || '',
+        currency: tx.currency,
     };
 }
 
-export function InputParse({ onAdd }: ExpenseInputProps) {
+export function InputParse({ onAdd }: TransactionInputProps) {
     const [input, setInput] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
     const [successCount, setSuccessCount] = useState(0);
     const [lastTagApplied, setLastTagApplied] = useState<string | null>(null);
-    const [pendingTransactions, setPendingTransactions] = useState<ParseResult[]>([]);
+    const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isFocused, setIsFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -130,10 +98,10 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
         onAdd({
             amount: currentTransaction.amount,
             category: currentTransaction.category,
-            merchant: currentTransaction.merchant,
+            description: currentTransaction.description,
             date: currentTransaction.date,
             type: currentTransaction.type,
-            note: currentTransaction.note,
+            currency: currentTransaction.currency,
         });
 
         // Remove current and move to next
@@ -154,10 +122,10 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
             onAdd({
                 amount: tx.amount,
                 category: tx.category,
-                merchant: tx.merchant,
+                description: tx.description,
                 date: tx.date,
                 type: tx.type,
-                note: tx.note,
+                currency: tx.currency,
             });
         });
 
@@ -189,7 +157,7 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
         setTimeout(() => setLastTagApplied(null), 600);
     };
 
-    const updateCurrent = (updates: Partial<ParseResult>) => {
+    const updateCurrent = (updates: Partial<Transaction>) => {
         if (!currentTransaction) return;
         setPendingTransactions((prev) => prev.map((tx, i) => (i === currentIndex ? { ...tx, ...updates } : tx)));
     };
@@ -270,15 +238,17 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                     {/* Amount & Type */}
                     <div className='flex items-center gap-3 sm:gap-4 bg-muted/30 p-3 sm:p-4 border-2 border-border rounded-xl'>
                         <button
-                            onClick={() => updateCurrent({ type: !currentTransaction.type })}
+                            onClick={() =>
+                                updateCurrent({ type: currentTransaction.type === 'income' ? 'expense' : 'income' })
+                            }
                             className={cn(
                                 'flex justify-center items-center border-2 rounded-xl size-12 sm:size-14 active:scale-95 transition-all duration-200 shrink-0',
-                                currentTransaction.type
+                                currentTransaction.type === 'income'
                                     ? 'border-emerald-300 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
                                     : 'border-rose-300 bg-rose-50 text-rose-600 hover:bg-rose-100',
                             )}
                         >
-                            {currentTransaction.type ? (
+                            {currentTransaction.type === 'income' ? (
                                 <ArrowUpCircle className='size-6 sm:size-7' />
                             ) : (
                                 <ArrowDownCircle className='size-6 sm:size-7' />
@@ -305,14 +275,23 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                     <div className='gap-3 sm:gap-4 grid grid-cols-1 sm:grid-cols-2'>
                         <div className='space-y-1.5'>
                             <label className='flex items-center gap-1.5 ml-1 font-bold text-[10px] text-muted-foreground uppercase tracking-wider'>
-                                <Store className='size-3' /> Description
+                                <DollarSign className='size-3' /> Currency
                             </label>
-                            <input
-                                type='text'
-                                value={currentTransaction.merchant}
-                                onChange={(e) => updateCurrent({ merchant: e.target.value })}
-                                className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-semibold text-foreground text-sm transition-all'
-                            />
+                            <select
+                                value={currentTransaction.currency}
+                                onChange={(e) => updateCurrent({ currency: e.target.value })}
+                                className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-semibold text-foreground text-sm transition-all appearance-none'
+                            >
+                                <option value='USD'>USD</option>
+                                <option value='EUR'>EUR</option>
+                                <option value='GBP'>GBP</option>
+                                <option value='JPY'>JPY</option>
+                                <option value='CAD'>CAD</option>
+                                <option value='AUD'>AUD</option>
+                                <option value='CHF'>CHF</option>
+                                <option value='CNY'>CNY</option>
+                                <option value='INR'>INR</option>
+                            </select>
                         </div>
 
                         <div className='space-y-1.5'>
@@ -323,6 +302,18 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                                 type='date'
                                 value={currentTransaction.date}
                                 onChange={(e) => updateCurrent({ date: e.target.value })}
+                                className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-semibold text-foreground text-sm transition-all'
+                            />
+                        </div>
+
+                        <div className='space-y-1.5'>
+                            <label className='flex items-center gap-1.5 ml-1 font-bold text-[10px] text-muted-foreground uppercase tracking-wider'>
+                                <Store className='size-3' /> Description
+                            </label>
+                            <input
+                                type='text'
+                                value={currentTransaction.description}
+                                onChange={(e) => updateCurrent({ description: e.target.value })}
                                 className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-semibold text-foreground text-sm transition-all'
                             />
                         </div>
@@ -345,7 +336,7 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                                             'px-2.5 sm:px-3 py-1.5 border-2 rounded-lg font-bold text-[10px] sm:text-xs uppercase tracking-wide active:scale-95 transition-all duration-200',
                                             isSelected
                                                 ? 'border-primary bg-primary text-primary-foreground shadow-md'
-                                                : cn(colors.bg, colors.text, colors.border, 'hover:border-primary/30'),
+                                                : cn(colors.bg, colors.text, 'hover:border-primary/30'),
                                         )}
                                     >
                                         {cat}
@@ -353,20 +344,6 @@ export function InputParse({ onAdd }: ExpenseInputProps) {
                                 );
                             })}
                         </div>
-                    </div>
-
-                    {/* Note */}
-                    <div className='space-y-1.5'>
-                        <label className='flex items-center gap-1.5 ml-1 font-bold text-[10px] text-muted-foreground uppercase tracking-wider'>
-                            <PenLine className='size-3' /> Note (optional)
-                        </label>
-                        <input
-                            type='text'
-                            value={currentTransaction.note || ''}
-                            onChange={(e) => updateCurrent({ note: e.target.value })}
-                            placeholder='Add a note...'
-                            className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-medium text-foreground placeholder:text-muted-foreground/60 text-sm transition-all'
-                        />
                     </div>
                 </div>
 

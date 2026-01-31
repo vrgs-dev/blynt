@@ -14,8 +14,10 @@ import {
     Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Transaction, Category } from './types';
+import type { Transaction } from '@/types/transaction';
+import { Category } from '@/types/category';
 import { formatDate } from '@/lib/date';
+import { CATEGORY_COLORS } from '@/constants/category';
 
 interface ExpenseListProps {
     transactions: Transaction[];
@@ -33,17 +35,6 @@ const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
     Shopping: <ShoppingBag className='size-5' />,
     Salary: <Banknote className='size-5' />,
     Other: <HelpCircle className='size-5' />,
-};
-
-const CATEGORY_STYLES: Record<Category, { bg: string; text: string; border: string }> = {
-    Food: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
-    Transport: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
-    Utilities: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
-    Entertainment: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
-    Healthcare: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200' },
-    Shopping: { bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-200' },
-    Salary: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
-    Other: { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200' },
 };
 
 export function TransactionList({ transactions, onDelete, title, showEmpty = true }: ExpenseListProps) {
@@ -83,8 +74,8 @@ interface TransactionRowProps {
 }
 
 function TransactionRow({ transaction, onDelete }: TransactionRowProps) {
-    const styles = CATEGORY_STYLES[transaction.category] || CATEGORY_STYLES.Other;
-    const icon = CATEGORY_ICONS[transaction.category] || CATEGORY_ICONS.Other;
+    const styles = CATEGORY_COLORS[transaction.category as Category] || CATEGORY_COLORS.Other;
+    const icon = CATEGORY_ICONS[transaction.category as Category] || CATEGORY_ICONS.Other;
 
     return (
         <div className='group flex justify-between items-center hover:bg-muted/30 p-3 sm:p-4 transition-colors'>
@@ -103,7 +94,9 @@ function TransactionRow({ transaction, onDelete }: TransactionRowProps) {
 
                 {/* Details */}
                 <div className='flex-1 min-w-0'>
-                    <h4 className='font-bold text-foreground text-sm sm:text-base truncate'>{transaction.merchant}</h4>
+                    <h4 className='font-bold text-foreground text-sm sm:text-base truncate'>
+                        {transaction.description}
+                    </h4>
                     <div className='flex items-center gap-2 mt-0.5'>
                         <span className='font-medium text-[10px] text-muted-foreground sm:text-xs'>
                             {formatDate(transaction.date)}
@@ -134,16 +127,16 @@ function TransactionRow({ transaction, onDelete }: TransactionRowProps) {
                         {transaction.type ? '+' : '-'}$
                         {transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </p>
-                    {transaction.note && (
+                    {transaction.description && (
                         <p className='max-w-[100px] sm:max-w-[120px] text-[10px] text-muted-foreground truncate'>
-                            {transaction.note}
+                            {transaction.description}
                         </p>
                     )}
                 </div>
 
                 {onDelete && (
                     <button
-                        onClick={() => onDelete(transaction.id)}
+                        onClick={() => onDelete(transaction.id ?? 'unknown')}
                         className='hover:bg-destructive/10 opacity-0 focus:opacity-100 group-hover:opacity-100 p-2 rounded-lg text-muted-foreground/50 hover:text-destructive transition-all'
                         aria-label='Delete transaction'
                     >

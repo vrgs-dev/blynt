@@ -1,26 +1,23 @@
 import { api } from './axios';
-import type { Transaction, ParsedResponse, TransactionType } from '@/services/types';
+import type { ParsedResponse } from '@/services/types';
+import type { Transaction, TransactionType } from '@/types/transaction';
 
-// Request types
 export interface ParseTransactionRequest {
     input: string;
     currency?: string;
 }
 
-// Response types
 export interface ParseTransactionResponse {
     response: ParsedResponse;
 }
 
-// Normalized transaction for UI consumption
 export interface NormalizedTransaction {
     amount: number;
     currency: string;
     category: string;
-    merchant: string;
+    description?: string;
     date: string;
     type: TransactionType;
-    note?: string;
 }
 
 /**
@@ -48,11 +45,10 @@ function normalizeTransaction(tx: Transaction): NormalizedTransaction {
     return {
         amount: tx.amount,
         category: normalizeCategory(tx.category),
-        merchant: tx.description,
+        description: tx.description,
         date: tx.date,
         type: tx.type,
         currency: tx.currency,
-        note: tx.description,
     };
 }
 

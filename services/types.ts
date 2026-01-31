@@ -1,15 +1,7 @@
-export type TransactionType = 'income' | 'expense';
+import { Transaction } from '@/types/transaction';
 
 export type ParsedResponse = { transaction: Transaction } | { transactions: Transaction[] };
 
-export interface Transaction {
-    type: TransactionType;
-    amount: number;
-    currency: string;
-    category: string;
-    date: string;
-    description: string;
-}
 export interface ChatMessage {
     role: 'user' | 'assistant' | 'system';
     content: string;

@@ -1,3 +1,4 @@
+import { Category } from '@/types/category';
 import { LucideIcon } from 'lucide-react';
 
 export const DASHBOARD_TABS = ['overview', 'transactions', 'calendar'] as const;
@@ -12,31 +13,8 @@ export interface DashboardTabConfig {
     default?: boolean;
 }
 
-// Transaction types
-export type TransactionType = 'income' | 'expense';
-export type Category =
-    | 'Food'
-    | 'Transport'
-    | 'Utilities'
-    | 'Entertainment'
-    | 'Healthcare'
-    | 'Shopping'
-    | 'Salary'
-    | 'Other';
-
-export interface Transaction {
-    id: string;
-    amount: number;
-    currency: string;
-    category: Category;
-    merchant: string;
-    date: string;
-    type: TransactionType;
-    note?: string;
-}
-
 export interface BudgetItem {
-    category: string;
+    category: Category;
     spent: number;
     limit: number;
 }

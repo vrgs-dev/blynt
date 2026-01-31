@@ -12,7 +12,7 @@ export const transaction = pgTable(
         category: varchar('category', { length: 100 }).notNull(),
 
         date: date('date').notNull(),
-        note: varchar('description', { length: 255 }),
+        description: varchar('description', { length: 255 }),
         rawInput: text('raw_input'),
 
         createdAt: timestamp('created_at').defaultNow(),

@@ -2,24 +2,16 @@
 
 import { cn } from '@/lib/utils';
 import type { BudgetItem } from './types';
+import { CATEGORY_COLORS, DEFAULT_COLORS } from '@/constants/category';
+import { Category } from '@/types/category';
 
 interface BudgetOverviewProps {
     budgets: BudgetItem[];
     title?: string;
 }
-
-const CATEGORY_COLORS: Record<string, { bar: string; bg: string; text: string }> = {
-    'Food & Dining': { bar: 'bg-orange-500', bg: 'bg-orange-100', text: 'text-orange-600' },
-    Food: { bar: 'bg-orange-500', bg: 'bg-orange-100', text: 'text-orange-600' },
-    Transportation: { bar: 'bg-blue-500', bg: 'bg-blue-100', text: 'text-blue-600' },
-    Transport: { bar: 'bg-blue-500', bg: 'bg-blue-100', text: 'text-blue-600' },
-    Entertainment: { bar: 'bg-purple-500', bg: 'bg-purple-100', text: 'text-purple-600' },
-    Shopping: { bar: 'bg-pink-500', bg: 'bg-pink-100', text: 'text-pink-600' },
-    Utilities: { bar: 'bg-amber-500', bg: 'bg-amber-100', text: 'text-amber-600' },
-    Healthcare: { bar: 'bg-rose-500', bg: 'bg-rose-100', text: 'text-rose-600' },
-};
-
-const DEFAULT_COLORS = { bar: 'bg-primary', bg: 'bg-primary/20', text: 'text-primary' };
+interface BudgetBarProps {
+    budget: BudgetItem;
+}
 
 export function BudgetOverview({ budgets, title = 'Budget Overview' }: BudgetOverviewProps) {
     return (
@@ -35,16 +27,12 @@ export function BudgetOverview({ budgets, title = 'Budget Overview' }: BudgetOve
     );
 }
 
-interface BudgetBarProps {
-    budget: BudgetItem;
-}
-
 function BudgetBar({ budget }: BudgetBarProps) {
     const percentage = Math.min((budget.spent / budget.limit) * 100, 100);
     const isOverBudget = percentage >= 100;
     const isWarning = percentage >= 80 && percentage < 100;
 
-    const colors = CATEGORY_COLORS[budget.category] || DEFAULT_COLORS;
+    const colors = CATEGORY_COLORS[budget.category as Category] || DEFAULT_COLORS;
 
     return (
         <div>
@@ -69,7 +57,7 @@ function BudgetBar({ budget }: BudgetBarProps) {
                 <div
                     className={cn(
                         'left-0 absolute inset-y-0 rounded-full transition-all duration-700 ease-out',
-                        isOverBudget ? 'bg-destructive' : isWarning ? 'bg-amber-500' : colors.bar,
+                        isOverBudget ? 'bg-destructive' : isWarning ? 'bg-amber-500' : colors.bg,
                     )}
                     style={{ width: `${percentage}%` }}
                 />
