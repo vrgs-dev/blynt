@@ -1,0 +1,486 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import {
+    Send,
+    Loader2,
+    Sparkles,
+    AlertCircle,
+    CheckCircle2,
+    X,
+    ChevronRight,
+    Save,
+    Calendar,
+    Tag,
+    Store,
+    PenLine,
+    ArrowUpCircle,
+    ArrowDownCircle,
+    Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+// Types
+interface ParseResult {
+    amount: number;
+    category: Category;
+    merchant: string;
+    date: string;
+    isIncome: boolean;
+    note?: string;
+}
+
+interface Expense {
+    id: string;
+    amount: number;
+    category: Category;
+    merchant: string;
+    date: string;
+    isIncome: boolean;
+    note?: string;
+}
+
+type Category = 'Food' | 'Transport' | 'Utilities' | 'Entertainment' | 'Healthcare' | 'Shopping' | 'Salary' | 'Other';
+
+interface ExpenseInputProps {
+    onAdd: (expense: Omit<Expense, 'id'>) => void;
+}
+
+const CATEGORIES: Category[] = [
+    'Food',
+    'Transport',
+    'Utilities',
+    'Entertainment',
+    'Healthcare',
+    'Shopping',
+    'Salary',
+    'Other',
+];
+
+const CATEGORY_COLORS: Record<Category, { bg: string; text: string; border: string }> = {
+    Food: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+    Transport: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+    Utilities: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+    Entertainment: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+    Healthcare: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+    Shopping: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
+    Salary: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+    Other: { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' },
+};
+
+// Mock API call - replace with actual implementation
+async function parseExpenseWithAI(input: string): Promise<ParseResult | null> {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const amountMatch = input.match(/\$?(\d+(?:\.\d{2})?)/);
+    const amount = amountMatch ? parseFloat(amountMatch[1]) : 0;
+
+    const isIncome =
+        input.toLowerCase().includes('received') ||
+        input.toLowerCase().includes('salary') ||
+        input.toLowerCase().includes('income') ||
+        input.toLowerCase().includes('earned');
+
+    return {
+        amount,
+        category: isIncome ? 'Salary' : 'Food',
+        merchant: 'Detected merchant',
+        date: new Date().toISOString().split('T')[0],
+        isIncome,
+        note: '',
+    };
+}
+
+export function InputParse({ onAdd }: ExpenseInputProps) {
+    const [input, setInput] = useState('');
+    const [isParsing, setIsParsing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [lastTagApplied, setLastTagApplied] = useState<string | null>(null);
+    const [pendingTransaction, setPendingTransaction] = useState<ParseResult | null>(null);
+    const [isFocused, setIsFocused] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (showSuccess) {
+            const timer = setTimeout(() => setShowSuccess(false), 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [showSuccess]);
+
+    const handleParse = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!input.trim() || isParsing) return;
+
+        setIsParsing(true);
+        setError(null);
+        setShowSuccess(false);
+
+        try {
+            const result = await parseExpenseWithAI(input);
+            if (result && result.amount > 0) {
+                setPendingTransaction(result);
+            } else {
+                setError("Couldn't understand the details. Try: 'Spent $20 at Pizza Hut'");
+            }
+        } catch {
+            setError('Something went wrong. Please try again.');
+        } finally {
+            setIsParsing(false);
+        }
+    };
+
+    const handleConfirm = () => {
+        if (!pendingTransaction) return;
+
+        onAdd({
+            amount: pendingTransaction.amount,
+            category: pendingTransaction.category,
+            merchant: pendingTransaction.merchant,
+            date: pendingTransaction.date,
+            isIncome: pendingTransaction.isIncome,
+            note: pendingTransaction.note,
+        });
+
+        setPendingTransaction(null);
+        setInput('');
+        setShowSuccess(true);
+    };
+
+    const handleCancel = () => {
+        setPendingTransaction(null);
+    };
+
+    const handleQuickTag = (text: string) => {
+        setInput(text);
+        setLastTagApplied(text);
+        inputRef.current?.focus();
+        setTimeout(() => setLastTagApplied(null), 600);
+    };
+
+    const updatePending = (updates: Partial<ParseResult>) => {
+        if (!pendingTransaction) return;
+        setPendingTransaction({ ...pendingTransaction, ...updates });
+    };
+
+    // Confirmation view
+    if (pendingTransaction) {
+        return (
+            <div className='slide-in-from-bottom-2 relative bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.08)] p-5 sm:p-6 border-2 border-foreground/10 rounded-2xl overflow-hidden transition-all animate-in duration-300 fade-in'>
+                {/* Decorative corner */}
+                <div className='-top-8 -right-8 absolute bg-primary/5 rounded-full size-24' />
+                <div className='-bottom-6 -left-6 absolute bg-accent/5 rounded-full size-16' />
+
+                {/* Header */}
+                <div className='relative flex justify-between items-center mb-5 sm:mb-6'>
+                    <div className='flex items-center gap-3'>
+                        <div className='relative'>
+                            <div className='flex justify-center items-center bg-primary/10 border-2 border-primary/20 rounded-xl size-10 sm:size-11'>
+                                <Sparkles className='size-5 text-primary' />
+                            </div>
+                            <div className='-right-0.5 -bottom-0.5 absolute bg-primary border-2 border-card rounded-full size-3 animate-pulse' />
+                        </div>
+                        <div>
+                            <h3 className='font-bold text-foreground text-sm sm:text-base'>Confirm Transaction</h3>
+                            <p className='font-semibold text-[10px] text-muted-foreground sm:text-xs uppercase tracking-widest'>
+                                Review the details
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleCancel}
+                        className='flex justify-center items-center hover:bg-destructive/10 border border-transparent hover:border-destructive/20 rounded-xl size-9 text-muted-foreground hover:text-destructive transition-all'
+                    >
+                        <X className='size-5' />
+                    </button>
+                </div>
+
+                <div className='relative space-y-4'>
+                    {/* Amount & Type */}
+                    <div className='flex items-center gap-3 sm:gap-4 bg-muted/30 p-3 sm:p-4 border-2 border-border rounded-xl'>
+                        <button
+                            onClick={() => updatePending({ isIncome: !pendingTransaction.isIncome })}
+                            className={cn(
+                                'flex justify-center items-center border-2 rounded-xl size-12 sm:size-14 active:scale-95 transition-all duration-200 shrink-0',
+                                pendingTransaction.isIncome
+                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                    : 'border-rose-300 bg-rose-50 text-rose-600 hover:bg-rose-100',
+                            )}
+                        >
+                            {pendingTransaction.isIncome ? (
+                                <ArrowUpCircle className='size-6 sm:size-7' />
+                            ) : (
+                                <ArrowDownCircle className='size-6 sm:size-7' />
+                            )}
+                        </button>
+                        <div className='flex-1 min-w-0'>
+                            <label className='block mb-1 font-bold text-[10px] text-muted-foreground uppercase tracking-wider'>
+                                Amount
+                            </label>
+                            <div className='flex items-baseline gap-1'>
+                                <span className='font-bold text-muted-foreground text-lg sm:text-xl'>$</span>
+                                <input
+                                    type='number'
+                                    value={pendingTransaction.amount}
+                                    onChange={(e) => updatePending({ amount: parseFloat(e.target.value) || 0 })}
+                                    className='bg-transparent outline-none w-full font-black text-foreground text-2xl sm:text-3xl tracking-tight'
+                                    step='0.01'
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Merchant & Date */}
+                    <div className='gap-3 sm:gap-4 grid grid-cols-1 sm:grid-cols-2'>
+                        <div className='space-y-1.5'>
+                            <label className='flex items-center gap-1.5 ml-1 font-bold text-[10px] text-muted-foreground uppercase tracking-wider'>
+                                <Store className='size-3' /> Merchant
+                            </label>
+                            <input
+                                type='text'
+                                value={pendingTransaction.merchant}
+                                onChange={(e) => updatePending({ merchant: e.target.value })}
+                                className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-semibold text-foreground text-sm transition-all'
+                            />
+                        </div>
+
+                        <div className='space-y-1.5'>
+                            <label className='flex items-center gap-1.5 ml-1 font-bold text-[10px] text-muted-foreground uppercase tracking-wider'>
+                                <Calendar className='size-3' /> Date
+                            </label>
+                            <input
+                                type='date'
+                                value={pendingTransaction.date}
+                                onChange={(e) => updatePending({ date: e.target.value })}
+                                className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-semibold text-foreground text-sm transition-all'
+                            />
+                        </div>
+                    </div>
+
+                    {/* Category */}
+                    <div className='space-y-2'>
+                        <label className='flex items-center gap-1.5 ml-1 font-bold text-[10px] text-muted-foreground uppercase tracking-wider'>
+                            <Tag className='size-3' /> Category
+                        </label>
+                        <div className='flex flex-wrap gap-1.5 sm:gap-2'>
+                            {CATEGORIES.map((cat) => {
+                                const colors = CATEGORY_COLORS[cat];
+                                const isSelected = pendingTransaction.category === cat;
+                                return (
+                                    <button
+                                        key={cat}
+                                        onClick={() => updatePending({ category: cat })}
+                                        className={cn(
+                                            'px-2.5 sm:px-3 py-1.5 border-2 rounded-lg font-bold text-[10px] sm:text-xs uppercase tracking-wide active:scale-95 transition-all duration-200',
+                                            isSelected
+                                                ? 'border-primary bg-primary text-primary-foreground shadow-md'
+                                                : cn(colors.bg, colors.text, colors.border, 'hover:border-primary/30'),
+                                        )}
+                                    >
+                                        {cat}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Note */}
+                    <div className='space-y-1.5'>
+                        <label className='flex items-center gap-1.5 ml-1 font-bold text-[10px] text-muted-foreground uppercase tracking-wider'>
+                            <PenLine className='size-3' /> Note (optional)
+                        </label>
+                        <input
+                            type='text'
+                            value={pendingTransaction.note || ''}
+                            onChange={(e) => updatePending({ note: e.target.value })}
+                            placeholder='Add a note...'
+                            className='bg-card px-3 sm:px-4 py-2.5 border-2 border-border focus:border-primary/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 w-full font-medium text-foreground placeholder:text-muted-foreground/60 text-sm transition-all'
+                        />
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className='flex gap-2 sm:gap-3 mt-6'>
+                    <button
+                        onClick={handleCancel}
+                        className='flex-1 bg-muted/50 hover:bg-muted px-4 py-3 border-2 border-border rounded-xl font-bold text-muted-foreground text-sm active:scale-[0.98] transition-all'
+                    >
+                        Discard
+                    </button>
+                    <button
+                        onClick={handleConfirm}
+                        className='group flex flex-2 justify-center items-center gap-2 bg-primary shadow-[3px_3px_0px_0px] shadow-primary/30 hover:shadow-[1px_1px_0px_0px] hover:shadow-primary/30 active:shadow-none px-4 py-3 border-2 border-primary rounded-xl font-bold text-primary-foreground text-sm active:scale-[0.98] transition-all'
+                    >
+                        <Save className='size-4' />
+                        Save
+                        <ChevronRight className='size-4 transition-transform group-hover:translate-x-0.5' />
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Main input view
+    return (
+        <div
+            className={cn(
+                'relative bg-card p-4 sm:p-5 border-2 rounded-2xl overflow-hidden transition-all duration-300',
+                isFocused
+                    ? 'border-primary/40 shadow-[4px_4px_0px_0px] shadow-primary/20'
+                    : 'border-border shadow-[3px_3px_0px_0px] shadow-foreground/5 hover:shadow-[4px_4px_0px_0px] hover:shadow-foreground/8',
+            )}
+        >
+            {/* Decorative elements */}
+            <div
+                className={cn(
+                    '-top-12 -right-12 absolute rounded-full size-32 transition-all duration-500',
+                    isFocused ? 'bg-primary/8 scale-110' : 'bg-primary/3',
+                )}
+            />
+
+            {/* Header */}
+            <div className='relative flex items-center gap-2 mb-3 sm:mb-4'>
+                <div
+                    className={cn(
+                        'flex justify-center items-center border-2 rounded-lg size-8 sm:size-9 transition-all duration-300',
+                        isParsing ? 'animate-pulse border-primary/40 bg-primary/20' : 'border-primary/20 bg-primary/10',
+                    )}
+                >
+                    {isParsing ? (
+                        <Zap className='size-4 sm:size-5 text-primary animate-pulse' />
+                    ) : (
+                        <Sparkles className='size-4 sm:size-5 text-primary' />
+                    )}
+                </div>
+                <div>
+                    <h3 className='font-bold text-foreground text-sm sm:text-base'>Natural Input</h3>
+                    <p className='font-semibold text-[9px] text-muted-foreground sm:text-[10px] uppercase tracking-widest'>
+                        Type as you speak
+                    </p>
+                </div>
+            </div>
+
+            {/* Input form */}
+            <form onSubmit={handleParse} className='relative'>
+                <div
+                    className={cn(
+                        'relative border-2 rounded-xl transition-all duration-300',
+                        error
+                            ? 'border-destructive/50 bg-destructive/5'
+                            : showSuccess
+                              ? 'border-emerald-400/50 bg-emerald-50/50'
+                              : isFocused
+                                ? 'border-primary/50 bg-primary/5'
+                                : 'border-border bg-muted/30',
+                    )}
+                >
+                    <input
+                        ref={inputRef}
+                        type='text'
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
+                        placeholder='E.g., Spent $45 at the grocery store today'
+                        className={cn(
+                            'bg-transparent py-3.5 sm:py-4 pr-14 sm:pr-16 pl-4 sm:pl-5 outline-none w-full font-medium text-foreground placeholder:text-muted-foreground/60 text-sm sm:text-base',
+                            isParsing && 'cursor-wait opacity-70',
+                        )}
+                        disabled={isParsing}
+                    />
+
+                    <button
+                        type='submit'
+                        disabled={isParsing || !input.trim()}
+                        className={cn(
+                            'top-1/2 right-2 sm:right-2.5 absolute flex justify-center items-center border-2 rounded-lg size-10 sm:size-11 text-white active:scale-90 transition-all -translate-y-1/2 duration-300',
+                            showSuccess
+                                ? 'border-emerald-500 bg-emerald-500 shadow-lg shadow-emerald-200'
+                                : isParsing
+                                  ? 'border-primary/50 bg-primary/70'
+                                  : input.trim()
+                                    ? 'border-primary bg-primary shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30'
+                                    : 'border-muted bg-muted text-muted-foreground',
+                        )}
+                    >
+                        {isParsing ? (
+                            <Loader2 className='size-5 animate-spin' />
+                        ) : showSuccess ? (
+                            <CheckCircle2 className='size-5 animate-in duration-200 zoom-in-50' />
+                        ) : (
+                            <Send className='size-5' />
+                        )}
+                    </button>
+                </div>
+            </form>
+
+            {/* Status messages */}
+            <div className='mt-2 h-5 sm:h-6 overflow-hidden'>
+                {error && (
+                    <div className='flex items-center gap-2 slide-in-from-top-1 animate-in duration-200'>
+                        <AlertCircle className='size-3.5 sm:size-4 text-destructive shrink-0' />
+                        <span className='font-semibold text-destructive text-xs sm:text-sm truncate'>{error}</span>
+                    </div>
+                )}
+                {showSuccess && !error && (
+                    <div className='flex items-center gap-2 slide-in-from-top-1 text-emerald-600 animate-in duration-200'>
+                        <div className='bg-emerald-500 rounded-full size-1.5 animate-ping' />
+                        <span className='font-bold text-xs sm:text-sm'>Transaction added</span>
+                    </div>
+                )}
+                {isParsing && !error && (
+                    <div className='flex items-center gap-2 animate-in duration-200 fade-in'>
+                        <span className='flex gap-0.5'>
+                            <span className='bg-primary rounded-full size-1 animate-bounce [animation-delay:-0.3s]' />
+                            <span className='bg-primary rounded-full size-1 animate-bounce [animation-delay:-0.15s]' />
+                            <span className='bg-primary rounded-full size-1 animate-bounce' />
+                        </span>
+                        <span className='font-bold text-[10px] text-primary sm:text-xs uppercase tracking-widest'>
+                            Analyzing...
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* Quick suggestions */}
+            <div className='flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4'>
+                <span className='mr-1 font-bold text-[9px] text-muted-foreground sm:text-[10px] uppercase tracking-widest'>
+                    Try:
+                </span>
+                <QuickTag
+                    text='Paid $1200 for rent'
+                    active={lastTagApplied === 'Paid $1200 for rent'}
+                    onClick={handleQuickTag}
+                />
+                <QuickTag
+                    text='Spent $15 on coffee'
+                    active={lastTagApplied === 'Spent $15 on coffee'}
+                    onClick={handleQuickTag}
+                />
+                <QuickTag
+                    text='Received $3000 salary'
+                    active={lastTagApplied === 'Received $3000 salary'}
+                    onClick={handleQuickTag}
+                />
+            </div>
+        </div>
+    );
+}
+
+function QuickTag({ text, active, onClick }: { text: string; active: boolean; onClick: (s: string) => void }) {
+    return (
+        <button
+            onClick={() => onClick(text)}
+            className={cn(
+                'px-2.5 sm:px-3 py-1 sm:py-1.5 border rounded-full font-bold text-[10px] sm:text-xs active:scale-95 transition-all duration-200',
+                active
+                    ? 'scale-105 border-primary bg-primary text-primary-foreground shadow-md'
+                    : 'border-border bg-muted/50 text-muted-foreground hover:border-primary/30 hover:bg-primary/10 hover:text-primary',
+            )}
+        >
+            {text}
+        </button>
+    );
+}
+
+export default InputParse;
