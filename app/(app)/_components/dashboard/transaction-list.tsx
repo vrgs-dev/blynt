@@ -138,10 +138,10 @@ function TransactionRow({ transaction, onEdit, onDelete }: TransactionRowProps) 
                     <p
                         className={cn(
                             'font-black text-base sm:text-lg tracking-tight',
-                            transaction.type ? 'text-emerald-600' : 'text-foreground',
+                            transaction.type === 'income' ? 'text-emerald-600' : 'text-foreground',
                         )}
                     >
-                        {transaction.type ? '+' : '-'}$
+                        {transaction.type === 'income' ? '+' : '-'}$
                         {transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </p>
                     {transaction.description && (
@@ -151,7 +151,7 @@ function TransactionRow({ transaction, onEdit, onDelete }: TransactionRowProps) 
                     )}
                 </div>
 
-                <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity'>
+                <div className='flex items-center gap-1 opacity-0 focus-within:opacity-100 group-hover:opacity-100 transition-opacity'>
                     {onEdit && (
                         <button
                             onClick={() => onEdit(transaction)}

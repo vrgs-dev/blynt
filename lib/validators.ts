@@ -3,7 +3,8 @@ import { ParsedResponse } from '@/services/types';
 
 export const transactionSchema = z.object({
     type: z.enum(['income', 'expense']),
-    amount: z.number().positive().min(0.01),
+    // @ts-expect-error - Zod coerce is not typed
+    amount: z.union([z.number(), z.string()]).pipe(z.coerce.number().positive().min(0.01)),
     currency: z.string().length(3).toUpperCase().default('USD'),
     category: z.string().min(1).max(50),
     date: z
