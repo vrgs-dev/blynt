@@ -11,19 +11,29 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, Settings, User } from 'lucide-react';
-import { UserMenu } from './types';
-import { signOut } from '@/lib/auth-client';
+import { signOut, useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-
-const userMenu: UserMenu = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    image: '',
-    initials: 'JD',
-};
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function UserMenu() {
+    const { data: session, isPending } = useSession();
     const router = useRouter();
+
+    if (isPending) {
+        return (
+            <div className='w-9 sm:w-10 h-9 sm:h-10'>
+                <Skeleton className='rounded-xl w-full h-full' />
+            </div>
+        );
+    }
+
+    const initials = (name: string) => {
+        return name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase();
+    };
 
     const handleSignOut = async () => {
         await signOut();
@@ -34,9 +44,9 @@ export function UserMenu() {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <button className='group shrink-0'>
-                    <Avatar className='shadow-[2px_2px_0px_0px] shadow-foreground/5 group-hover:shadow-[3px_3px_0px_0px] group-hover:shadow-foreground/10 border-2 border-border rounded-xl size-9 sm:size-10 transition-all group-hover:-translate-x-px group-hover:-translate-y-px cursor-pointer'>
-                        <AvatarFallback className='bg-linear-to-br from-primary/20 to-primary/10 border border-primary/20 rounded-xl font-bold text-primary text-xs'>
-                            {userMenu.initials}
+                    <Avatar className='bg-linear-to-br from-primary/20 to-primary/10 shadow-[2px_2px_0px_0px] shadow-foreground/5 group-hover:shadow-[3px_3px_0px_0px] group-hover:shadow-foreground/10 border-2 border-border rounded-xl size-9 sm:size-10 transition-all group-hover:-translate-x-px group-hover:-translate-y-px cursor-pointer'>
+                        <AvatarFallback className='bg-transparent rounded-xl font-bold text-primary text-xs'>
+                            {initials(session?.user?.name || '')}
                         </AvatarFallback>
                     </Avatar>
                 </button>
@@ -48,14 +58,14 @@ export function UserMenu() {
             >
                 <DropdownMenuLabel className='p-0 font-normal'>
                     <div className='flex items-center gap-3 bg-muted/50 p-2 rounded-lg'>
-                        <Avatar className='shadow-sm border-2 border-border/50 rounded-lg size-10'>
-                            <AvatarFallback className='bg-linear-to-br from-primary/20 to-primary/10 rounded-lg font-bold text-primary text-sm'>
-                                {userMenu.initials}
+                        <Avatar className='bg-linear-to-br from-primary/20 to-primary/10 shadow-[2px_2px_0px_0px] shadow-foreground/5 group-hover:shadow-[3px_3px_0px_0px] group-hover:shadow-foreground/10 border-2 border-border rounded-xl size-9 sm:size-10 transition-all group-hover:-translate-x-px group-hover:-translate-y-px cursor-pointer'>
+                            <AvatarFallback className='bg-transparent rounded-lg font-bold text-primary text-sm'>
+                                {initials(session?.user?.name || '')}
                             </AvatarFallback>
                         </Avatar>
                         <div className='flex-1 min-w-0'>
-                            <p className='font-bold text-foreground text-sm truncate'>{userMenu.name}</p>
-                            <p className='text-muted-foreground text-xs truncate'>{userMenu.email}</p>
+                            <p className='font-bold text-foreground text-sm truncate'>{session?.user?.name}</p>
+                            <p className='text-muted-foreground text-xs truncate'>{session?.user?.email}</p>
                         </div>
                     </div>
                 </DropdownMenuLabel>
