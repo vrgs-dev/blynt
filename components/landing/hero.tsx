@@ -24,11 +24,11 @@ const staggerContainer = {
 
 export function Hero() {
     return (
-        <section className='relative overflow-hidden px-4 pb-16 pt-12 sm:px-6 sm:pb-24 sm:pt-20 lg:pb-32 lg:pt-28'>
+        <section className='relative px-4 sm:px-6 pt-12 sm:pt-20 lg:pt-28 pb-16 sm:pb-24 lg:pb-32 overflow-hidden'>
             {/* Background decoration */}
-            <div className='pointer-events-none absolute inset-0 -z-10' aria-hidden='true'>
+            <div className='-z-10 absolute inset-0 pointer-events-none' aria-hidden='true'>
                 <motion.div
-                    className='absolute -right-40 -top-40 h-80 w-80 rounded-full bg-primary/10 blur-3xl sm:h-96 sm:w-96'
+                    className='-top-40 -right-40 absolute bg-primary/10 blur-3xl rounded-full w-80 sm:w-96 h-80 sm:h-96'
                     animate={{
                         scale: [1, 1.1, 1],
                         opacity: [0.5, 0.7, 0.5],
@@ -40,7 +40,7 @@ export function Hero() {
                     }}
                 />
                 <motion.div
-                    className='absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-accent/10 blur-3xl sm:h-96 sm:w-96'
+                    className='-bottom-40 -left-40 absolute bg-accent/10 blur-3xl rounded-full w-80 sm:w-96 h-80 sm:h-96'
                     animate={{
                         scale: [1, 1.15, 1],
                         opacity: [0.5, 0.6, 0.5],
@@ -61,20 +61,20 @@ export function Hero() {
                 animate='visible'
             >
                 <motion.div variants={fadeInUp}>
-                    <Badge className='mb-4 border-2 border-primary/20 bg-primary/10 text-primary sm:mb-6'>
-                        No spreadsheets required
+                    <Badge className='bg-primary/10 mb-4 sm:mb-6 border-2 border-primary/20 text-primary'>
+                        AI-Powered Expense Tracker
                     </Badge>
                 </motion.div>
 
                 <motion.h1
-                    className='text-balance text-3xl font-black tracking-tight sm:text-5xl lg:text-6xl'
+                    className='font-black text-3xl sm:text-5xl lg:text-6xl text-balance tracking-tight'
                     variants={fadeInUp}
                 >
                     Stop logging expenses.{' '}
-                    <span className='relative inline-block'>
-                        <span className='relative z-10 text-primary'>Start writing them.</span>
+                    <span className='inline-block relative'>
+                        <span className='z-10 relative text-primary'>Start writing them.</span>
                         <motion.span
-                            className='absolute -bottom-1 left-0 right-0 h-3 -skew-x-3 bg-primary/20 sm:-bottom-2 sm:h-4'
+                            className='right-0 -bottom-1 sm:-bottom-2 left-0 absolute bg-primary/20 h-3 sm:h-4 -skew-x-3'
                             initial={{ scaleX: 0 }}
                             animate={{ scaleX: 1 }}
                             transition={{ duration: 0.6, delay: 0.5, ease: 'easeOut' }}
@@ -85,7 +85,7 @@ export function Hero() {
                 </motion.h1>
 
                 <motion.p
-                    className='mx-auto mt-4 max-w-2xl text-pretty text-base text-muted-foreground sm:mt-6 sm:text-lg lg:text-xl'
+                    className='mx-auto mt-4 sm:mt-6 max-w-2xl text-muted-foreground text-base sm:text-lg lg:text-xl text-pretty'
                     variants={fadeInUp}
                 >
                     Type <span className='font-semibold text-foreground'>&quot;coffee $4.50&quot;</span> and you&apos;re
@@ -93,13 +93,13 @@ export function Hero() {
                 </motion.p>
 
                 <motion.div
-                    className='mt-8 flex flex-col items-center justify-center gap-3 sm:mt-10 sm:flex-row sm:gap-4'
+                    className='flex sm:flex-row flex-col justify-center items-center gap-3 sm:gap-4 mt-8 sm:mt-10'
                     variants={fadeInUp}
                 >
                     <Button
                         asChild
                         size='lg'
-                        className='w-full shadow-[3px_3px_0px_0px] shadow-foreground/20 sm:w-auto'
+                        className='shadow-[3px_3px_0px_0px] shadow-foreground/20 w-full sm:w-auto'
                     >
                         <Link href='/login'>
                             Try It Free
@@ -121,52 +121,52 @@ export function Hero() {
 
 function DemoCard() {
     return (
-        <div className='mx-auto mt-10 max-w-md sm:mt-14'>
+        <div className='mx-auto mt-10 sm:mt-14 max-w-md'>
             <motion.div
                 className='relative'
                 whileHover={{ y: -4 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
-                <div className='overflow-hidden rounded-2xl border-2 border-border bg-card p-4 shadow-[4px_4px_0px_0px] shadow-foreground/10'>
-                    <p className='text-left text-sm text-muted-foreground'>You type:</p>
-                    <p className='mt-2 text-left font-mono text-sm sm:text-base'>
+                <div className='bg-card shadow-[4px_4px_0px_0px] shadow-foreground/10 p-4 border-2 border-border rounded-2xl overflow-hidden'>
+                    <p className='text-muted-foreground text-sm text-left'>You type:</p>
+                    <p className='mt-2 font-mono text-sm sm:text-base text-left'>
                         <span className='text-foreground'>Lunch with Sarah </span>
                         <span className='font-bold text-accent'>$32</span>
                         <span className='text-foreground'> split the bill</span>
                         <motion.span
-                            className='inline-block h-5 w-0.5 bg-foreground'
+                            className='inline-block bg-foreground w-0.5 h-5'
                             animate={{ opacity: [1, 0, 1] }}
                             transition={{ duration: 1, repeat: Infinity }}
                             aria-hidden='true'
                         />
                     </p>
-                    <div className='mt-4 flex flex-wrap gap-2 border-t pt-4'>
-                        <p className='mb-1 w-full text-left text-xs text-muted-foreground'>We get:</p>
+                    <div className='flex flex-wrap gap-2 mt-4 pt-4 border-t'>
+                        <p className='mb-1 w-full text-muted-foreground text-xs text-left'>We get:</p>
                         <motion.span
-                            className='inline-flex items-center gap-1.5 rounded-lg bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent'
+                            className='inline-flex items-center gap-1.5 bg-accent/10 px-2.5 py-1 rounded-lg font-medium text-accent text-xs'
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.8 }}
                         >
-                            <span className='size-1.5 rounded-full bg-accent' aria-hidden='true' />
+                            <span className='bg-accent rounded-full size-1.5' aria-hidden='true' />
                             $32.00
                         </motion.span>
                         <motion.span
-                            className='inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary'
+                            className='inline-flex items-center gap-1.5 bg-primary/10 px-2.5 py-1 rounded-lg font-medium text-primary text-xs'
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.95 }}
                         >
-                            <span className='size-1.5 rounded-full bg-primary' aria-hidden='true' />
+                            <span className='bg-primary rounded-full size-1.5' aria-hidden='true' />
                             Food & Dining
                         </motion.span>
                         <motion.span
-                            className='inline-flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground'
+                            className='inline-flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-lg font-medium text-muted-foreground text-xs'
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 1.1 }}
                         >
-                            <span className='size-1.5 rounded-full bg-muted-foreground' aria-hidden='true' />
+                            <span className='bg-muted-foreground rounded-full size-1.5' aria-hidden='true' />
                             Today
                         </motion.span>
                     </div>
