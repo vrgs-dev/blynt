@@ -12,6 +12,8 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, Settings, User } from 'lucide-react';
 import { UserMenu } from './types';
+import { signOut } from '@/lib/auth-client';
+import { useRouter } from 'next/navigation';
 
 const userMenu: UserMenu = {
     name: 'John Doe',
@@ -21,6 +23,13 @@ const userMenu: UserMenu = {
 };
 
 export function UserMenu() {
+    const router = useRouter();
+
+    const handleSignOut = async () => {
+        await signOut();
+        router.push('/login');
+    };
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -64,7 +73,10 @@ export function UserMenu() {
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className='my-2' />
-                <DropdownMenuItem className='focus:bg-destructive/10 rounded-lg font-semibold text-destructive focus:text-destructive'>
+                <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className='focus:bg-destructive/10 rounded-lg font-semibold text-destructive focus:text-destructive'
+                >
                     <LogOut className='size-4' />
                     Log out
                 </DropdownMenuItem>
