@@ -6,6 +6,8 @@ import { transactionSchema } from '@/lib/validators';
 import { NextResponse } from 'next/server';
 import z from 'zod';
 import { and, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 export const transactionsInputSchema = z.object({
     transactions: z.array(transactionSchema).min(1),
@@ -30,11 +32,18 @@ export const transactionFiltersSchema = z.object({
 
 export async function GET(request: NextRequest) {
     try {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
         const searchParams = request.nextUrl.searchParams;
         const paramsObject = Object.fromEntries(searchParams.entries());
         const filters = transactionFiltersSchema.parse(paramsObject);
 
-        const conditions = [];
+        const conditions = [eq(transaction.userId, userId)];
         if (filters.startDate) {
             conditions.push(gte(transaction.date, filters.startDate));
         }
@@ -85,6 +94,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
         const body = await request.json();
         const { transactions, rawInput } = transactionsInputSchema.parse(body);
 
@@ -93,6 +109,7 @@ export async function POST(request: NextRequest) {
                 .insert(transaction)
                 .values(
                     transactions.map((t) => ({
+                        userId,
                         type: t.type,
                         amount: String(t.amount),
                         currency: t.currency,

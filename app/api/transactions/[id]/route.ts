@@ -1,11 +1,20 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { transaction } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { transactionSchema } from '@/lib/validators';
+import { headers } from 'next/headers';
+import { auth } from '@/lib/auth';
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
         const { id } = await params;
         const body = await request.json();
 
@@ -21,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
                 date: validatedData.date,
                 description: validatedData.description,
             })
-            .where(eq(transaction.id, id))
+            .where(and(eq(transaction.id, id), eq(transaction.userId, userId)))
             .returning();
 
         if (!updatedTransaction) {
@@ -37,8 +46,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
         const { id } = await params;
-        const [deletedTransaction] = await db.delete(transaction).where(eq(transaction.id, id)).returning();
+        const [deletedTransaction] = await db
+            .delete(transaction)
+            .where(and(eq(transaction.id, id), eq(transaction.userId, userId)))
+            .returning();
 
         if (!deletedTransaction) {
             return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
