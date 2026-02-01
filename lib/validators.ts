@@ -24,8 +24,7 @@ export function validateTransactionOutput(response: ParsedResponse): ParsedRespo
         return parsedResponseSchema.parse(response);
     } catch (error) {
         if (error instanceof z.ZodError) {
-            // @ts-expect-error - ZodError has an errors property
-            throw new Error(`Invalid LLM output: ${error.errors[0].message}`);
+            new Error(`Invalid LLM output`);
         }
         throw error;
     }

@@ -2,15 +2,23 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { transaction } from '@/db/schema';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 interface BudgetItem {
     category: string;
     spent: number;
-    limit: number;
 }
 
 export async function GET() {
     try {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
         // Get current month date range
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -19,7 +27,6 @@ export async function GET() {
         const startDateStr = startOfMonth.toISOString().split('T')[0];
         const endDateStr = endOfMonth.toISOString().split('T')[0];
 
-        // Query to get expenses grouped by category for current month
         const categoryExpenses = await db
             .select({
                 category: transaction.category,
@@ -31,6 +38,7 @@ export async function GET() {
                     eq(transaction.type, 'expense'),
                     gte(transaction.date, startDateStr),
                     lte(transaction.date, endDateStr),
+                    eq(transaction.userId, userId),
                 ),
             )
             .groupBy(transaction.category);
@@ -38,8 +46,7 @@ export async function GET() {
         // Build budgets array - no limits, just category totals
         const budgets: BudgetItem[] = categoryExpenses.map((expense) => ({
             category: expense.category,
-            spent: Math.round(expense.spent * 100) / 100, // Round to 2 decimals
-            limit: 0, // No limit - will be shown as total only
+            spent: Math.round(expense.spent * 100) / 100,
         }));
 
         // Sort by spent amount (highest first)
@@ -48,6 +55,6 @@ export async function GET() {
         return NextResponse.json({ budgets });
     } catch (error) {
         console.error('[API Error]', error instanceof Error ? error.message : 'Unknown error');
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Something went wrong, please try again' }, { status: 500 });
     }
 }

@@ -40,7 +40,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         return NextResponse.json({ transaction: updatedTransaction });
     } catch (error) {
         console.error('[API Error]', error instanceof Error ? error.message : 'Unknown error');
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Something went wrong, please try again' }, { status: 500 });
     }
 }
 
@@ -66,6 +66,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('[API Error]', error instanceof Error ? error.message : 'Unknown error');
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Something went wrong, please try again' }, { status: 500 });
     }
 }

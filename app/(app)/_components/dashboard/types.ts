@@ -15,7 +15,6 @@ export interface DashboardTabConfig {
 export interface BudgetItem {
     category: string;
     spent: number;
-    limit: number;
 }
 
 export interface StatCardData {

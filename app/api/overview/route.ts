@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { transaction } from '@/db/schema';
-import { and, gte, lte, sql } from 'drizzle-orm';
+import { and, eq, gte, lte, sql } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 interface Stats {
     balance: { value: string; change: string; isPositive: boolean };
@@ -12,6 +14,13 @@ interface Stats {
 
 export async function GET() {
     try {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
         const now = new Date();
 
         // Current month range
@@ -27,14 +36,19 @@ export async function GET() {
         const previousStartStr = previousMonthStart.toISOString().split('T')[0];
         const previousEndStr = previousMonthEnd.toISOString().split('T')[0];
 
-        // Get current month totals
         const [currentStats] = await db
             .select({
                 totalIncome: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'income' THEN CAST(${transaction.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
                 totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'expense' THEN CAST(${transaction.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
             })
             .from(transaction)
-            .where(and(gte(transaction.date, currentStartStr), lte(transaction.date, currentEndStr)));
+            .where(
+                and(
+                    gte(transaction.date, currentStartStr),
+                    lte(transaction.date, currentEndStr),
+                    eq(transaction.userId, userId),
+                ),
+            );
 
         // Get previous month totals
         const [previousStats] = await db
@@ -43,9 +57,14 @@ export async function GET() {
                 totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'expense' THEN CAST(${transaction.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
             })
             .from(transaction)
-            .where(and(gte(transaction.date, previousStartStr), lte(transaction.date, previousEndStr)));
+            .where(
+                and(
+                    gte(transaction.date, previousStartStr),
+                    lte(transaction.date, previousEndStr),
+                    eq(transaction.userId, userId),
+                ),
+            );
 
-        // Calculate values
         const currentIncome = currentStats.totalIncome || 0;
         const currentExpenses = currentStats.totalExpenses || 0;
         const currentBalance = currentIncome - currentExpenses;
@@ -111,6 +130,6 @@ export async function GET() {
         return NextResponse.json({ stats });
     } catch (error) {
         console.error('[API Error]', error instanceof Error ? error.message : 'Unknown error');
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Something went wrong, please try again' }, { status: 500 });
     }
 }

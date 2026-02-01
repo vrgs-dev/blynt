@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
         });
     } catch (error) {
         console.error('[API Error]', error instanceof Error ? error.message : 'Unknown error');
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Something went wrong, please try again' }, { status: 500 });
     }
 }
 
@@ -125,6 +125,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ transactions: insertedTransactions });
     } catch (error) {
         console.error('[API Error]', error instanceof Error ? error.message : 'Unknown error');
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Something went wrong, please try again' }, { status: 500 });
     }
 }
