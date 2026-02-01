@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 
 import { AlertCircle, Mail, ArrowLeft, KeyRound, CheckCircle2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Footer from '../_components/footer';
 
 const forgotPasswordSchema = z.object({
     email: z.email('Please enter a valid email address'),
@@ -232,9 +233,7 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 {/* Footer tagline */}
-                <p className='mt-8 font-semibold text-muted-foreground/60 text-xs text-center uppercase tracking-widest'>
-                    Smart finance tracking for everyone
-                </p>
+                <Footer />
             </div>
         </div>
     );

@@ -31,7 +31,6 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
                 <div className='hidden lg:block top-1/3 left-[8%] absolute bg-primary/15 rounded-lg size-8 rotate-45' />
                 <div className='hidden lg:block right-[12%] bottom-1/4 absolute border-4 border-accent/10 rounded-full size-20' />
             </div>
-
             {children}
         </div>
     );

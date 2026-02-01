@@ -1,0 +1,16 @@
+{
+  "name": "Blynt - AI-Powered Expense Tracker",
+  "short_name": "Blynt",
+  "description": "Track expenses and income with natural language. No forms, no categories.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [],
+  "categories": [
+    "finance",
+    "productivity"
+  ],
+  "screenshots": []
+}

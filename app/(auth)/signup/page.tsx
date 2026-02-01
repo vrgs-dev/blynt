@@ -10,8 +10,9 @@ import { signUp, signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { AlertCircle, Mail, Lock, User, ArrowRight, Rocket, Check, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, Mail, Lock, User, ArrowRight, Rocket, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Footer from '../_components/footer';
 
 const signupSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters').max(50, 'Name cannot exceed 50 characters'),
@@ -25,13 +26,6 @@ const signupSchema = z.object({
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
-
-const PASSWORD_REQUIREMENTS = [
-    { regex: /.{8,}/, label: 'At least 8 characters' },
-    { regex: /[A-Z]/, label: 'One uppercase letter' },
-    { regex: /[a-z]/, label: 'One lowercase letter' },
-    { regex: /[0-9]/, label: 'One number' },
-];
 
 export default function SignupPage() {
     const router = useRouter();
@@ -47,8 +41,6 @@ export default function SignupPage() {
             password: '',
         },
     });
-
-    const password = form.watch('password');
 
     const onSubmit = async (data: SignupFormValues) => {
         setError(null);
@@ -214,39 +206,6 @@ export default function SignupPage() {
                                 )}
                             />
 
-                            {/* Password Requirements */}
-                            <div className='bg-muted/30 p-4 border-2 border-border rounded-xl'>
-                                <p className='mb-3 font-bold text-[10px] text-muted-foreground uppercase tracking-widest'>
-                                    Password requirements
-                                </p>
-                                <div className='gap-2 grid grid-cols-2'>
-                                    {PASSWORD_REQUIREMENTS.map((req) => {
-                                        const isMet = req.regex.test(password || '');
-                                        return (
-                                            <div
-                                                key={req.label}
-                                                className={cn(
-                                                    'flex items-center gap-2 font-semibold text-xs transition-colors duration-200',
-                                                    isMet ? 'text-emerald-600' : 'text-muted-foreground',
-                                                )}
-                                            >
-                                                <div
-                                                    className={cn(
-                                                        'flex justify-center items-center border-2 rounded size-4 transition-all duration-200',
-                                                        isMet
-                                                            ? 'bg-emerald-500 border-emerald-500'
-                                                            : 'border-muted-foreground/30 bg-transparent',
-                                                    )}
-                                                >
-                                                    {isMet && <Check className='size-2.5 text-white' strokeWidth={3} />}
-                                                </div>
-                                                {req.label}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
                             <Button
                                 type='submit'
                                 className={cn(
@@ -339,9 +298,7 @@ export default function SignupPage() {
                 </div>
 
                 {/* Footer tagline */}
-                <p className='mt-8 font-semibold text-muted-foreground/60 text-xs text-center uppercase tracking-widest'>
-                    Smart finance tracking for everyone
-                </p>
+                <Footer />
             </div>
         </div>
     );

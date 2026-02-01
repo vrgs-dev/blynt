@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AlertCircle, Lock, ArrowLeft, ShieldCheck, CheckCircle2, Eye, EyeOff, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Footer from '../_components/footer';
 
 const resetPasswordSchema = z
     .object({
@@ -361,9 +362,7 @@ function ResetPasswordForm() {
                 </div>
 
                 {/* Footer tagline */}
-                <p className='mt-8 font-semibold text-muted-foreground/60 text-xs text-center uppercase tracking-widest'>
-                    Smart finance tracking for everyone
-                </p>
+                <Footer />
             </div>
         </div>
     );
