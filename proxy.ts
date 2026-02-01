@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth';
 
 const protectedRoutes = ['/dashboard'];
 
-const authRoutes = ['/login', '/signup'];
+const authRoutes = ['/login', '/signup', '/forgot-password', '/reset-password'];
 
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -35,5 +35,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/login', '/signup'],
+    matcher: ['/dashboard/:path*', '/login', '/signup', '/forgot-password', '/reset-password'],
 };

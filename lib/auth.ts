@@ -11,6 +11,21 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: process.env.NODE_ENV === 'production',
+        sendResetPassword: async ({ user, url }) => {
+            console.log(`[Password Reset] Send to ${user.email}: ${url}`);
+
+            // TODO: Replace with actual email sending
+            // await sendEmail({
+            //     to: user.email,
+            //     subject: 'Reset your Blynt password',
+            //     html: `
+            //         <h1>Reset your password</h1>
+            //         <p>Click the link below to reset your password:</p>
+            //         <a href="${url}">Reset Password</a>
+            //         <p>This link expires in 1 hour.</p>
+            //     `,
+            // });
+        },
     },
     plugins: [nextCookies()],
     advanced: {

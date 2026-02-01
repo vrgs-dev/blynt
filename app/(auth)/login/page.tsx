@@ -10,7 +10,6 @@ import { signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { LogoAnimated } from '@/components/logo';
 import { AlertCircle, Mail, Lock, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -83,11 +82,6 @@ function LoginForm() {
     return (
         <div className='relative flex justify-center items-center p-4 sm:p-6 min-h-screen'>
             <div className='relative w-full max-w-md'>
-                {/* Logo */}
-                <div className='flex justify-center mb-8'>
-                    <LogoAnimated size='xl' />
-                </div>
-
                 {/* Main Card - Soft Brutalism Style */}
                 <div className='relative bg-card shadow-[4px_4px_0px_0px] shadow-foreground/10 p-6 sm:p-8 border-2 border-border rounded-2xl transition-all'>
                     {/* Decorative corner accent */}
@@ -181,6 +175,16 @@ function LoginForm() {
                                     </FormItem>
                                 )}
                             />
+
+                            {/* Forgot password link */}
+                            <div className='flex justify-end'>
+                                <Link
+                                    href='/forgot-password'
+                                    className='font-semibold text-muted-foreground hover:text-primary text-sm transition-colors'
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
 
                             <Button
                                 type='submit'

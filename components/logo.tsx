@@ -31,48 +31,71 @@ interface LogoIconProps {
 
 export function LogoIcon({ size = 32, className }: LogoIconProps) {
     return (
-        <svg width={size} height={size} className={className} viewBox='0 0 48 48' fill='none'>
-            <g clipPath='url(#clip0_16_2)'>
-                <path
-                    d='M36 0H12C5.37258 0 0 5.37258 0 12V36C0 42.6274 5.37258 48 12 48H36C42.6274 48 48 42.6274 48 36V12C48 5.37258 42.6274 0 36 0Z'
-                    fill='#00C59E'
-                />
-                <path d='M15 13V39' stroke='white' strokeWidth='5' strokeLinecap='round' />
-                <path
-                    d='M15 12H25.5C28.8137 12 31.5 14.6863 31.5 18C31.5 21.3137 28.8137 24 25.5 24H15'
-                    stroke='white'
-                    strokeWidth='5'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                />
-                <path
-                    d='M15 24H27C31.1421 24 34.5 27.3579 34.5 31.5C34.5 35.6421 31.1421 39 27 39H15'
-                    stroke='white'
-                    strokeWidth='5'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                />
-            </g>
-            <defs>
-                <clipPath id='clip0_16_2'>
-                    <rect width='48' height='48' fill='white' />
-                </clipPath>
-            </defs>
-        </svg>
+        <div className='inline-block relative'>
+            <svg width={size} height={size} className={cn('z-10 relative', className)} viewBox='0 0 48 48' fill='none'>
+                <g clipPath='url(#clip0_16_2)'>
+                    {/* Background with original green */}
+                    <rect x='0' y='0' width='48' height='48' rx='12' fill='#00C59E' />
+                    <rect
+                        x='0'
+                        y='0'
+                        width='48'
+                        height='48'
+                        rx='12'
+                        stroke='hsl(var(--foreground))'
+                        strokeWidth='2'
+                        strokeOpacity='0.15'
+                        fill='none'
+                    />
+                    {/* B letter - bold brutalist style */}
+                    <path d='M15 13V39' stroke='white' strokeWidth='5.5' strokeLinecap='round' />
+                    <path
+                        d='M15 12H25.5C28.8137 12 31.5 14.6863 31.5 18C31.5 21.3137 28.8137 24 25.5 24H15'
+                        stroke='white'
+                        strokeWidth='5.5'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                    />
+                    <path
+                        d='M15 24H27C31.1421 24 34.5 27.3579 34.5 31.5C34.5 35.6421 31.1421 39 27 39H15'
+                        stroke='white'
+                        strokeWidth='5.5'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                    />
+                </g>
+                <defs>
+                    <clipPath id='clip0_16_2'>
+                        <rect width='48' height='48' rx='12' fill='white' />
+                    </clipPath>
+                </defs>
+            </svg>
+            <div
+                className='top-0 left-0 -z-10 absolute bg-foreground/10 rounded-md'
+                style={{
+                    width: size,
+                    height: size,
+                    transform: 'translate(3px, 3px)',
+                }}
+            />
+        </div>
     );
 }
 
-// Animated version with hover glow
+// Animated version with hover effects - Soft Brutalism style
 export function LogoAnimated({ className, size = 'md', showText = true }: LogoProps) {
     const { icon, text, gap } = sizes[size];
 
     return (
-        <div className={cn('flex items-center group', gap, className)}>
-            <div className='relative'>
+        <div className={cn('group flex items-center', gap, className)}>
+            <div className='-translate-x-px -translate-y-px'>
                 <LogoIcon size={icon} />
-                <div className='absolute inset-0 rounded-lg bg-primary/40 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10' />
             </div>
-            {showText && <span className={cn('font-bold tracking-tight', text)}>Blynt</span>}
+            {showText && (
+                <span className={cn('font-black tracking-tight transition-colors', 'group-hover:text-primary', text)}>
+                    Blynt
+                </span>
+            )}
         </div>
     );
 }
