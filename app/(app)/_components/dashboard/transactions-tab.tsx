@@ -19,6 +19,7 @@ export function TransactionsTab() {
     const [filters, setFilters] = useState<Filters>({
         limit: ITEMS_PER_PAGE,
         offset: 0,
+        startDate: new Date().toISOString().split('T')[0],
     });
 
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);

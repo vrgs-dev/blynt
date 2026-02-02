@@ -1,13 +1,16 @@
 import { type NextRequest } from 'next/server';
 
 import { db } from '@/db';
-import { transaction } from '@/db/schema';
 import { transactionSchema } from '@/lib/validators';
 import { NextResponse } from 'next/server';
 import z from 'zod';
 import { and, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { transactions } from '@/db/schema';
+import { getActiveSubscription } from '@/lib/subscriptions/getActiveSubscription';
+import { canCreateTransactions } from '@/lib/billing/can';
+import { applyHistoryLimit } from '@/lib/billing/history';
 
 export const transactionsInputSchema = z.object({
     transactions: z.array(transactionSchema).min(1),
@@ -38,53 +41,65 @@ export async function GET(request: NextRequest) {
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
+        const subscription = await getActiveSubscription(session.user.id);
+
+        if (!subscription) {
+            return NextResponse.json({ error: 'No active subscription found' }, { status: 401 });
+        }
+
         const userId = session.user.id;
         const searchParams = request.nextUrl.searchParams;
         const paramsObject = Object.fromEntries(searchParams.entries());
         const filters = transactionFiltersSchema.parse(paramsObject);
 
-        const conditions = [eq(transaction.userId, userId)];
-        if (filters.startDate) {
-            conditions.push(gte(transaction.date, filters.startDate));
+        const startDate = applyHistoryLimit(subscription, filters.startDate ? new Date(filters.startDate) : undefined);
+
+        const conditions = [eq(transactions.userId, userId)];
+        if (startDate) {
+            conditions.push(gte(transactions.date, startDate.toISOString().split('T')[0]));
         }
         if (filters.endDate) {
-            conditions.push(lte(transaction.date, filters.endDate));
+            conditions.push(lte(transactions.date, filters.endDate));
         }
         if (filters.category) {
-            conditions.push(eq(transaction.category, filters.category));
+            conditions.push(eq(transactions.category, filters.category));
         }
         if (filters.type) {
-            conditions.push(eq(transaction.type, filters.type));
+            conditions.push(eq(transactions.type, filters.type));
         }
         if (filters.search) {
             // Search in description, category, or amount
             conditions.push(
                 or(
-                    ilike(transaction.description, `%${filters.search}%`),
-                    ilike(transaction.category, `%${filters.search}%`),
-                    sql`CAST(${transaction.amount} AS TEXT) ILIKE ${`%${filters.search}%`}`,
+                    ilike(transactions.description, `%${filters.search}%`),
+                    ilike(transactions.category, `%${filters.search}%`),
+                    sql`CAST(${transactions.amount} AS TEXT) ILIKE ${`%${filters.search}%`}`,
                 )!,
             );
         }
 
         const [{ count }] = await db
             .select({ count: sql<number>`count(*)::int` })
-            .from(transaction)
+            .from(transactions)
             .where(and(...conditions));
 
-        const transactions = await db
+        const transactionsList = await db
             .select()
-            .from(transaction)
+            .from(transactions)
             .where(and(...conditions))
-            .orderBy(desc(transaction.date), desc(transaction.createdAt))
+            .orderBy(desc(transactions.date), desc(transactions.createdAt))
             .limit(filters.limit)
             .offset(filters.offset);
 
         return NextResponse.json({
-            transactions,
+            transactions: transactionsList,
             total: count,
             limit: filters.limit,
             offset: filters.offset,
+            meta: {
+                historyDays: subscription.plan.features.historyDays,
+            },
         });
     } catch (error) {
         console.error('[API Error]', error instanceof Error ? error.message : 'Unknown error');
@@ -102,13 +117,31 @@ export async function POST(request: NextRequest) {
         }
         const userId = session.user.id;
         const body = await request.json();
-        const { transactions, rawInput } = transactionsInputSchema.parse(body);
+        const { transactions: transactionsList, rawInput } = transactionsInputSchema.parse(body);
+
+        const subscription = await getActiveSubscription(userId);
+
+        if (!subscription) {
+            return NextResponse.json({ error: 'No active subscription found' }, { status: 401 });
+        }
+
+        const canAddTransactions = await canCreateTransactions(subscription, userId, transactionsList.length);
+
+        if (!canAddTransactions) {
+            return NextResponse.json(
+                {
+                    error: 'Monthly transaction limit reached',
+                    code: 'LIMIT_REACHED',
+                },
+                { status: 403 },
+            );
+        }
 
         const insertedTransactions = await db.transaction(async (tx) => {
             return await tx
-                .insert(transaction)
+                .insert(transactions)
                 .values(
-                    transactions.map((t) => ({
+                    transactionsList.map((t) => ({
                         userId,
                         type: t.type,
                         amount: String(t.amount),

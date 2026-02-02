@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { transaction } from '@/db/schema';
+import { transactions } from '@/db/schema';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
@@ -38,30 +38,30 @@ export async function GET() {
 
         const [currentStats] = await db
             .select({
-                totalIncome: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'income' THEN CAST(${transaction.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
-                totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'expense' THEN CAST(${transaction.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
+                totalIncome: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = 'income' THEN CAST(${transactions.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
+                totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = 'expense' THEN CAST(${transactions.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
             })
-            .from(transaction)
+            .from(transactions)
             .where(
                 and(
-                    gte(transaction.date, currentStartStr),
-                    lte(transaction.date, currentEndStr),
-                    eq(transaction.userId, userId),
+                    gte(transactions.date, currentStartStr),
+                    lte(transactions.date, currentEndStr),
+                    eq(transactions.userId, userId),
                 ),
             );
 
         // Get previous month totals
         const [previousStats] = await db
             .select({
-                totalIncome: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'income' THEN CAST(${transaction.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
-                totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'expense' THEN CAST(${transaction.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
+                totalIncome: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = 'income' THEN CAST(${transactions.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
+                totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = 'expense' THEN CAST(${transactions.amount} AS DECIMAL) ELSE 0 END), 0)::float`,
             })
-            .from(transaction)
+            .from(transactions)
             .where(
                 and(
-                    gte(transaction.date, previousStartStr),
-                    lte(transaction.date, previousEndStr),
-                    eq(transaction.userId, userId),
+                    gte(transactions.date, previousStartStr),
+                    lte(transactions.date, previousEndStr),
+                    eq(transactions.userId, userId),
                 ),
             );
 

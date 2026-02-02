@@ -110,7 +110,7 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 
 export const TransactionType = pgEnum('transaction_type', ['income', 'expense']);
 
-export const transaction = pgTable(
+export const transactions = pgTable(
     'transactions',
     {
         id: uuid('id').primaryKey().defaultRandom(),

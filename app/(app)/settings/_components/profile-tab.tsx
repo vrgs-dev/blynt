@@ -1,7 +1,7 @@
 'use client';
 
 import * as motion from 'motion/react-client';
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,9 +17,10 @@ interface ProfileTabProps {
     onNameChange: (name: string) => void;
     onReset: () => void;
     onSave: () => void;
+    isSaving?: boolean;
 }
 
-export function ProfileTab({ name, email, planName, onNameChange, onReset, onSave }: ProfileTabProps) {
+export function ProfileTab({ name, email, planName, onNameChange, onReset, onSave, isSaving }: ProfileTabProps) {
     return (
         <motion.div className='space-y-6' variants={staggerContainer} initial='hidden' animate='visible'>
             <motion.div variants={fadeInUp}>
@@ -73,11 +74,22 @@ export function ProfileTab({ name, email, planName, onNameChange, onReset, onSav
                 </div>
 
                 <div className='flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:justify-end'>
-                    <Button variant='outline' onClick={onReset}>
+                    <Button variant='outline' onClick={onReset} disabled={isSaving}>
                         Reset
                     </Button>
-                    <Button className='shadow-[2px_2px_0px_0px] shadow-foreground/10' onClick={onSave}>
-                        Save Changes
+                    <Button
+                        className='shadow-[2px_2px_0px_0px] shadow-foreground/10'
+                        onClick={onSave}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? (
+                            <>
+                                <Loader2 className='mr-2 size-4 animate-spin' />
+                                Saving...
+                            </>
+                        ) : (
+                            'Save Changes'
+                        )}
                     </Button>
                 </div>
             </motion.div>

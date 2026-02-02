@@ -5,6 +5,8 @@ import { getNextService } from '@/services';
 import { validateTransactionOutput } from '@/lib/validators';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { getActiveSubscription } from '@/lib/subscriptions/getActiveSubscription';
+import { canCreateTransactions } from '@/lib/billing/can';
 
 const parseInputSchema = z.object({
     input: z.string().min(1).max(1000).trim(),
@@ -18,6 +20,29 @@ export async function POST(request: Request) {
         });
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Check subscription limits BEFORE calling AI
+        const subscription = await getActiveSubscription(session.user.id);
+
+        if (!subscription) {
+            return NextResponse.json({ error: 'No active subscription found' }, { status: 401 });
+        }
+
+        // Check if user can create at least 1 transaction (minimum check before AI call)
+        const canCreate = await canCreateTransactions(subscription, session.user.id, 1);
+
+        if (!canCreate) {
+            return NextResponse.json(
+                {
+                    error: 'Monthly transaction limit reached. Upgrade to Pro for unlimited transactions.',
+                    code: 'LIMIT_REACHED',
+                    usage: {
+                        limit: subscription.plan.features.maxTransactionsPerMonth,
+                    },
+                },
+                { status: 403 },
+            );
         }
 
         const body = await request.json();

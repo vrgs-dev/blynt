@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { transaction } from '@/db/schema';
+import { transactions } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { transactionSchema } from '@/lib/validators';
 import { headers } from 'next/headers';
@@ -21,7 +21,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         const validatedData = transactionSchema.parse(body);
 
         const [updatedTransaction] = await db
-            .update(transaction)
+            .update(transactions)
             .set({
                 type: validatedData.type,
                 amount: String(validatedData.amount),
@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
                 date: validatedData.date,
                 description: validatedData.description,
             })
-            .where(and(eq(transaction.id, id), eq(transaction.userId, userId)))
+            .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
             .returning();
 
         if (!updatedTransaction) {
@@ -55,8 +55,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         const userId = session.user.id;
         const { id } = await params;
         const [deletedTransaction] = await db
-            .delete(transaction)
-            .where(and(eq(transaction.id, id), eq(transaction.userId, userId)))
+            .delete(transactions)
+            .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
             .returning();
 
         if (!deletedTransaction) {

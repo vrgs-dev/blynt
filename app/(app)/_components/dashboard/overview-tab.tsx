@@ -14,7 +14,7 @@ export function OverviewTab() {
 
     const { data: transactionsData, isLoading: isLoadingTransactions } = useQuery({
         queryKey: ['transactions'],
-        queryFn: () => getTransactions({ limit: 5, offset: 0 }),
+        queryFn: () => getTransactions({ limit: 5, offset: 0, startDate: new Date().toISOString().split('T')[0] }),
     });
 
     const { data: budgetData, isLoading: isLoadingBudget } = useBudget();

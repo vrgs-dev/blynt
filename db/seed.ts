@@ -34,6 +34,7 @@ async function seed() {
                     price: '50.00',
                     interval: 'yearly',
                     description: 'Pro billed yearly',
+                    isPopular: true,
                 },
                 {
                     tier: 'team',

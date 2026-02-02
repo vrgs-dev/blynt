@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { transaction } from '@/db/schema';
+import { transactions } from '@/db/schema';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
@@ -29,19 +29,19 @@ export async function GET() {
 
         const categoryExpenses = await db
             .select({
-                category: transaction.category,
-                spent: sql<number>`SUM(CAST(${transaction.amount} AS DECIMAL))::float`,
+                category: transactions.category,
+                spent: sql<number>`SUM(CAST(${transactions.amount} AS DECIMAL))::float`,
             })
-            .from(transaction)
+            .from(transactions)
             .where(
                 and(
-                    eq(transaction.type, 'expense'),
-                    gte(transaction.date, startDateStr),
-                    lte(transaction.date, endDateStr),
-                    eq(transaction.userId, userId),
+                    eq(transactions.type, 'expense'),
+                    gte(transactions.date, startDateStr),
+                    lte(transactions.date, endDateStr),
+                    eq(transactions.userId, userId),
                 ),
             )
-            .groupBy(transaction.category);
+            .groupBy(transactions.category);
 
         // Build budgets array - no limits, just category totals
         const budgets: BudgetItem[] = categoryExpenses.map((expense) => ({
