@@ -27,6 +27,7 @@ export function OverviewTab() {
             await queryClient.invalidateQueries({ queryKey: ['budget'] });
             await queryClient.invalidateQueries({ queryKey: ['overview'] });
             await queryClient.refetchQueries({ queryKey: ['transactions'] });
+            await queryClient.refetchQueries({ queryKey: ['subscription'] });
         },
         onError: (error) => {
             console.error('Error creating transaction:', error);

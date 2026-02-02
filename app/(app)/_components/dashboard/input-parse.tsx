@@ -29,6 +29,7 @@ import type { Category } from '@/types/category';
 import { CATEGORIES, CATEGORY_COLORS } from '@/constants/category';
 import { Transaction } from '@/types/transaction';
 import { UpgradeDialog } from '@/components/upgrade-dialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TransactionInputProps {
     onAdd: (transaction: Transaction, rawInput: string) => void;
@@ -61,12 +62,20 @@ export function InputParse({ onAdd }: TransactionInputProps) {
     const [upgradeDetails, setUpgradeDetails] = useState<{ currentUsage: number; limit: number } | undefined>();
     const inputRef = useRef<HTMLInputElement>(null);
 
+    const queryClient = useQueryClient();
     const { data: subscriptionData } = useSubscription();
     const isFreePlan = subscriptionData?.plan.tier === 'free';
     const usage = subscriptionData?.usage;
 
     const parseMutation = useParseTransaction({
-        onSuccess: (transactions) => {
+        onSuccess: async (transactions) => {
+            await queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            await queryClient.invalidateQueries({ queryKey: ['budget'] });
+            await queryClient.invalidateQueries({ queryKey: ['overview'] });
+
+            await queryClient.refetchQueries({ queryKey: ['transactions'] });
+            await queryClient.refetchQueries({ queryKey: ['subscription'] });
+
             if (transactions.length > 0) {
                 setPendingTransactions(transactions.map(toParseResult));
                 setCurrentIndex(0);
@@ -458,9 +467,9 @@ export function InputParse({ onAdd }: TransactionInputProps) {
                     {/* Usage indicator for free plan */}
                     {isFreePlan && usage && (
                         <div className='flex items-center gap-2'>
-                            <div className='flex items-center gap-1.5 px-2.5 py-1 bg-muted/50 border border-border rounded-lg'>
+                            <div className='flex items-center gap-1.5 bg-muted/50 px-2.5 py-1 border border-border rounded-lg'>
                                 <Crown className='size-3 text-amber-500' />
-                                <span className='text-[10px] font-bold text-muted-foreground'>
+                                <span className='font-bold text-[10px] text-muted-foreground'>
                                     {usage.transactionsUsed}/{usage.transactionsLimit}
                                 </span>
                             </div>

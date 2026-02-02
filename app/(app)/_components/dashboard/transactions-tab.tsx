@@ -38,6 +38,7 @@ export function TransactionsTab() {
             await queryClient.invalidateQueries({ queryKey: ['budget'] });
             await queryClient.invalidateQueries({ queryKey: ['overview'] });
             await queryClient.refetchQueries({ queryKey: ['transactions'] });
+            await queryClient.refetchQueries({ queryKey: ['subscription'] });
         },
         onError: (error) => {
             console.error('Error updating transaction:', error);
@@ -50,6 +51,7 @@ export function TransactionsTab() {
             await queryClient.invalidateQueries({ queryKey: ['budget'] });
             await queryClient.invalidateQueries({ queryKey: ['overview'] });
             await queryClient.refetchQueries({ queryKey: ['transactions'] });
+            await queryClient.refetchQueries({ queryKey: ['subscription'] });
         },
         onError: (error) => {
             console.error('Error deleting transaction:', error);
