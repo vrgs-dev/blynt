@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -10,10 +9,11 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, Settings, User } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { signOut, useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { initials } from '@/lib/utils';
 
 export function UserMenu() {
     const { data: session, isPending } = useSession();
@@ -26,14 +26,6 @@ export function UserMenu() {
             </div>
         );
     }
-
-    const initials = (name: string) => {
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase();
-    };
 
     const handleSignOut = async () => {
         await signOut();
@@ -70,17 +62,12 @@ export function UserMenu() {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className='my-2' />
-                <DropdownMenuItem asChild className='rounded-lg font-semibold'>
-                    <Link href='/profile'>
-                        <User className='size-4' />
-                        Profile
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className='rounded-lg font-semibold'>
-                    <Link href='/settings'>
-                        <Settings className='size-4' />
-                        Settings
-                    </Link>
+                <DropdownMenuItem
+                    onClick={() => router.push('/settings')}
+                    className='rounded-lg font-semibold cursor-pointer'
+                >
+                    <Settings className='size-4' />
+                    Manage account
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className='my-2' />
                 <DropdownMenuItem

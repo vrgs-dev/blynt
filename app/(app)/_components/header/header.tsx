@@ -12,7 +12,7 @@ export default function Header() {
             <div className='mx-auto px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl'>
                 <div className='overflow-hidden'>
                     <div className='flex justify-between items-center gap-2 sm:gap-3 px-3 sm:px-4 md:px-6 h-14 sm:h-16'>
-                        <Link href='/' className='shrink-0'>
+                        <Link href='/dashboard?tab=overview' className='shrink-0'>
                             <LogoAnimated size='md' />
                         </Link>
 
