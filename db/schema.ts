@@ -1,4 +1,16 @@
-import { pgEnum, pgTable, uuid, text, decimal, varchar, date, timestamp, index, boolean } from 'drizzle-orm/pg-core';
+import {
+    pgEnum,
+    pgTable,
+    uuid,
+    text,
+    decimal,
+    varchar,
+    date,
+    timestamp,
+    index,
+    boolean,
+    jsonb,
+} from 'drizzle-orm/pg-core';
 
 import { relations } from 'drizzle-orm';
 
@@ -13,6 +25,9 @@ export const users = pgTable('users', {
         .defaultNow()
         .$onUpdate(() => /* @__PURE__ */ new Date())
         .notNull(),
+
+    role: text('role').default('customer'),
+    disabled: boolean('disabled').default(false),
 });
 
 export const sessions = pgTable(
@@ -116,3 +131,114 @@ export const transaction = pgTable(
     },
     (table) => [index('transactions_type_date_idx').on(table.type, table.date)],
 );
+
+export const planInterval = pgEnum('plan_interval', ['monthly', 'yearly']);
+export const planTier = pgEnum('plan_tier', ['free', 'pro', 'team']);
+
+export const plans = pgTable(
+    'plans',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        tier: planTier('tier').notNull(),
+        price: decimal('price', { precision: 12, scale: 2 }).notNull(),
+        currency: varchar('currency', { length: 3 }).notNull().default('USD'),
+        interval: planInterval('interval').notNull(),
+        isActive: boolean('is_active').default(true).notNull(),
+        isPopular: boolean('is_popular').default(false).notNull(),
+        description: varchar('description', { length: 255 }),
+        createdAt: timestamp('created_at').defaultNow(),
+        updatedAt: timestamp('updated_at').defaultNow(),
+    },
+    (table) => [index('plans_tier_idx').on(table.tier)],
+);
+
+export const planFeatures = pgTable(
+    'plan_features',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        planId: uuid('plan_id')
+            .notNull()
+            .references(() => plans.id, { onDelete: 'cascade' }),
+        feature: varchar('feature', { length: 100 }).notNull(), // transaction request, ai insights, custom categories, export data
+        value: varchar('value', { length: 100 }).notNull(), // 10, true, unlimited
+        createdAt: timestamp('created_at').defaultNow(),
+        updatedAt: timestamp('updated_at').defaultNow(),
+    },
+    (table) => [index('plan_features_planId_idx').on(table.planId)],
+);
+
+export const subscriptions = pgTable(
+    'subscriptions',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        userId: text('user_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        planId: uuid('plan_id')
+            .notNull()
+            .references(() => plans.id, { onDelete: 'cascade' }),
+        status: varchar('status', { length: 100 }).notNull(), // active, inactive, trial, past_due
+        currentPeriodStart: timestamp('current_period_start').notNull(),
+        currentPeriodEnd: timestamp('current_period_end').notNull(),
+        createdAt: timestamp('created_at').defaultNow(),
+        updatedAt: timestamp('updated_at').defaultNow(),
+    },
+    (table) => [index('subscriptions_userId_idx').on(table.userId)],
+);
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+    user: one(users, {
+        fields: [subscriptions.userId],
+        references: [users.id],
+    }),
+    plan: one(plans, {
+        fields: [subscriptions.planId],
+        references: [plans.id],
+    }),
+}));
+
+export const settings = pgTable(
+    'settings',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        userId: text('user_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        key: varchar('key', { length: 100 }).notNull(), // currency, timezone, language, notifications
+        value: jsonb('value').notNull(), // USD, UTC, en, true
+        createdAt: timestamp('created_at').defaultNow(),
+        updatedAt: timestamp('updated_at').defaultNow(),
+    },
+    (table) => [index('settings_userId_idx').on(table.userId), index('settings_key_idx').on(table.key)],
+);
+
+export const settingsRelations = relations(settings, ({ one }) => ({
+    user: one(users, {
+        fields: [settings.userId],
+        references: [users.id],
+    }),
+}));
+
+export const notifications = pgTable(
+    'notifications',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        userId: text('user_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        title: varchar('title', { length: 100 }).notNull(),
+        message: varchar('message', { length: 255 }).notNull(),
+        type: varchar('type', { length: 100 }).notNull(), // info, warning, error, success
+        read: boolean('read').default(false).notNull(),
+        createdAt: timestamp('created_at').defaultNow(),
+        updatedAt: timestamp('updated_at').defaultNow(),
+    },
+    (table) => [index('notifications_userId_idx').on(table.userId)],
+);
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+    user: one(users, {
+        fields: [notifications.userId],
+        references: [users.id],
+    }),
+}));
