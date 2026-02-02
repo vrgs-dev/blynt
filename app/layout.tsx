@@ -2,6 +2,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { cn } from '@/lib/utils';
+import { QueryProvider } from '@/providers/query-provider';
+import { Toaster } from 'sonner';
 
 const geist = Geist({ subsets: ['latin'], display: 'swap' });
 const geistMono = Geist_Mono({ subsets: ['latin'], display: 'swap' });
@@ -219,14 +221,19 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang='en'>
-            <head>
-                <script
-                    type='application/ld+json'
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-                />
-            </head>
-            <body className={cn('font-sans antialiased', geist.className, geistMono.className)}>{children}</body>
-        </html>
+        <QueryProvider>
+            <html lang='en'>
+                <head>
+                    <script
+                        type='application/ld+json'
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+                    />
+                </head>
+                <body className={cn('font-sans antialiased', geist.className, geistMono.className)}>
+                    {children}
+                    <Toaster />
+                </body>
+            </html>
+        </QueryProvider>
     );
 }

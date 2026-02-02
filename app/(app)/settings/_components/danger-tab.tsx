@@ -26,20 +26,20 @@ export function DangerTab({ onDeleteAccount }: DangerTabProps) {
                         <AlertTriangle className='size-6 text-destructive' />
                     </div>
                     <div className='flex-1'>
-                        <h3 className='text-lg font-bold text-destructive'>Delete Account</h3>
+                        <h3 className='text-lg font-bold text-destructive'>Disable Account</h3>
                         <p className='text-sm text-muted-foreground'>
-                            Permanently delete your account and all associated data including transactions, categories,
-                            and settings. This action cannot be undone.
+                            Disable your account until your next login. If not reactivated within 30 days, it will be
+                            permanently deleted.
                         </p>
                     </div>
                 </div>
 
                 <div className='flex flex-col gap-3 border-t border-destructive/20 pt-4 sm:flex-row sm:items-center sm:justify-between'>
                     <p className='text-xs text-muted-foreground'>
-                        Type <span className='font-mono font-bold'>DELETE</span> to confirm
+                        Type <span className='font-mono font-bold'>DISABLE</span> to confirm
                     </p>
                     <Button variant='destructive' className='w-full sm:w-auto' onClick={onDeleteAccount}>
-                        Delete My Account
+                        Disable My Account
                     </Button>
                 </div>
             </motion.div>

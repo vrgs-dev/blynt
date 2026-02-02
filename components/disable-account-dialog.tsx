@@ -23,7 +23,7 @@ interface DisableAccountDialogProps {
 
 export function DisableAccountDialog({ open, onOpenChange, onConfirm, isLoading }: DisableAccountDialogProps) {
     const [confirmation, setConfirmation] = useState('');
-    const isValid = confirmation === 'DELETE';
+    const isValid = confirmation === 'DISABLE';
 
     const handleConfirm = () => {
         if (isValid) {
@@ -78,9 +78,9 @@ export function DisableAccountDialog({ open, onOpenChange, onConfirm, isLoading 
                                 <span className='font-bold text-xs uppercase tracking-wider'>Danger</span>
                             </div>
                         </div>
-                        <DialogTitle className='font-black text-2xl tracking-tight'>Delete Account</DialogTitle>
+                        <DialogTitle className='font-black text-2xl tracking-tight'>Disable Account</DialogTitle>
                         <DialogDescription className='font-medium text-white/80'>
-                            This action is permanent and cannot be undone
+                            Your account will be temporarily disabled.
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -96,11 +96,11 @@ export function DisableAccountDialog({ open, onOpenChange, onConfirm, isLoading 
                                 </div>
                                 <div>
                                     <p className='font-bold text-destructive text-sm'>
-                                        You are about to delete your account
+                                        You are about to disable your account
                                     </p>
                                     <p className='mt-0.5 text-muted-foreground text-xs'>
-                                        All your data including transactions, settings, and history will be permanently
-                                        deleted.
+                                        Your account will be disabled until your next login. If not reactivated within
+                                        30 days, it will be permanently deleted.
                                     </p>
                                 </div>
                             </div>
@@ -109,12 +109,12 @@ export function DisableAccountDialog({ open, onOpenChange, onConfirm, isLoading 
                         {/* Confirmation input */}
                         <div className='space-y-3'>
                             <p className='font-bold text-[10px] text-muted-foreground uppercase tracking-widest'>
-                                Type <span className='font-mono text-destructive'>DELETE</span> to confirm
+                                Type <span className='font-mono text-destructive'>DISABLE</span> to confirm
                             </p>
                             <Input
                                 value={confirmation}
                                 onChange={(e) => setConfirmation(e.target.value.toUpperCase())}
-                                placeholder='Type DELETE here'
+                                placeholder='Type DISABLE here'
                                 disabled={isLoading}
                                 className={cn(
                                     'border-2 font-mono text-center text-lg tracking-widest',
@@ -137,12 +137,12 @@ export function DisableAccountDialog({ open, onOpenChange, onConfirm, isLoading 
                                 {isLoading ? (
                                     <>
                                         <Loader2 className='mr-2 w-5 h-5 animate-spin' />
-                                        Deleting...
+                                        Disabling...
                                     </>
                                 ) : (
                                     <>
                                         <Skull className='mr-2 w-5 h-5' />
-                                        Delete My Account Forever
+                                        Disable My Account
                                     </>
                                 )}
                             </Button>

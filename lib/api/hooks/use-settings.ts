@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getSettings, updateSettings, disableAccount, UpdateSettingsRequest } from '../settings';
+import {
+    getSettings,
+    updateSettings,
+    disableAccount,
+    UpdateSettingsRequest,
+    enableAccount,
+    checkDisableAccount,
+} from '../settings';
 
 export function useSettings() {
     return useQuery({
@@ -27,14 +34,29 @@ export function useUpdateSettings(options?: UseUpdateSettingsOptions) {
     });
 }
 
-interface UseDisableAccountOptions {
+interface UseAccountOptions {
     onSuccess?: () => void;
     onError?: (error: Error) => void;
 }
 
-export function useDisableAccount(options?: UseDisableAccountOptions) {
+export function useDisableAccount(options?: UseAccountOptions) {
     return useMutation({
         mutationFn: (confirmation: string) => disableAccount(confirmation),
+        onSuccess: options?.onSuccess,
+        onError: options?.onError,
+    });
+}
+
+export function useCheckDisableAccount() {
+    return useQuery({
+        queryKey: ['checkDisableAccount'],
+        queryFn: checkDisableAccount,
+    });
+}
+
+export function useEnableAccount(options?: UseAccountOptions) {
+    return useMutation({
+        mutationFn: (confirmation: string) => enableAccount(confirmation),
         onSuccess: options?.onSuccess,
         onError: options?.onError,
     });

@@ -41,3 +41,15 @@ export async function disableAccount(confirmation: string): Promise<{ success: b
     });
     return response.data;
 }
+
+export async function checkDisableAccount(): Promise<{ success: boolean; message: string }> {
+    const response = await api.get<{ success: boolean; message: string }>('/account/disable');
+    return response.data;
+}
+
+export async function enableAccount(confirmation: string): Promise<{ success: boolean; message: string }> {
+    const response = await api.post<{ success: boolean; message: string }>('/account/enable', {
+        confirmation,
+    });
+    return response.data;
+}
