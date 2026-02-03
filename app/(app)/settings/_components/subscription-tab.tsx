@@ -140,7 +140,7 @@ export function SubscriptionTab() {
                         <li className='flex items-center gap-2 text-sm'>
                             <Check className='size-4 text-primary shrink-0' />
                             <span>
-                                {currentPlanFeatures.maxTransactionsPerMonth === -1
+                                {currentPlanFeatures.maxTransactionsPerMonth === 999999
                                     ? 'Unlimited transactions'
                                     : `${currentPlanFeatures.maxTransactionsPerMonth} transactions/month`}
                             </span>
@@ -148,7 +148,7 @@ export function SubscriptionTab() {
                         <li className='flex items-center gap-2 text-sm'>
                             <Check className='size-4 text-primary shrink-0' />
                             <span>
-                                {currentPlanFeatures.historyDays === -1
+                                {currentPlanFeatures.historyDays === 999999
                                     ? 'Unlimited history'
                                     : `${currentPlanFeatures.historyDays}-day history`}
                             </span>
