@@ -2,6 +2,7 @@
     "name": "blynt",
     "version": "0.1.0",
     "private": true,
+    "license": "AGPL-3.0-or-later",
     "scripts": {
         "dev": "next dev",
         "build": "next build",
@@ -13,6 +14,11 @@
         "db:migrate": "drizzle-kit migrate",
         "db:push": "drizzle-kit push",
         "db:seed": "tsx db/seed.ts"
+    },
+    "author": "Camilo Vargas",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/vrgs-dev/blynt"
     },
     "dependencies": {
         "@cerebras/cerebras_cloud_sdk": "1.64.1",
