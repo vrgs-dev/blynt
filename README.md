@@ -91,7 +91,7 @@ Traditional expense trackers are **tedious**. Blynt solves this by:
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/blynt.git
+git clone https://github.com/vrgs-dev/blynt.git
 cd blynt
 ```
 
