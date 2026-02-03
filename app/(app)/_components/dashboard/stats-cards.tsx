@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Wallet, ArrowUpCircle, ArrowDownCircle, PiggyBank } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -9,21 +9,19 @@ interface StatCardProps {
     value: string;
     change: string;
     isPositive: boolean;
-    icon?: 'balance' | 'income' | 'expense' | 'savings';
+    icon?: 'balance' | 'income' | 'expense';
 }
 
 const ICONS = {
     balance: Wallet,
     income: ArrowUpCircle,
     expense: ArrowDownCircle,
-    savings: PiggyBank,
 };
 
 const ICON_STYLES = {
     balance: 'bg-primary/10 text-primary border-primary/20',
     income: 'bg-emerald-50 text-emerald-600 border-emerald-200',
     expense: 'bg-rose-50 text-rose-600 border-rose-200',
-    savings: 'bg-amber-50 text-amber-600 border-amber-200',
 };
 
 export function StatCard({ title, value, change, isPositive, icon = 'balance' }: StatCardProps) {
@@ -78,7 +76,6 @@ interface StatsGridProps {
         balance: { value: string; change: string; isPositive: boolean };
         income: { value: string; change: string; isPositive: boolean };
         expenses: { value: string; change: string; isPositive: boolean };
-        savings: { value: string; change: string; isPositive: boolean };
     };
     isLoading?: boolean;
 }
@@ -86,8 +83,7 @@ interface StatsGridProps {
 export function StatsGrid({ stats, isLoading }: StatsGridProps) {
     if (isLoading) {
         return (
-            <div className='gap-3 sm:gap-4 grid grid-cols-2 lg:grid-cols-4'>
-                <StatCardSkeleton />
+            <div className='gap-3 sm:gap-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
                 <StatCardSkeleton />
                 <StatCardSkeleton />
                 <StatCardSkeleton />
@@ -96,7 +92,7 @@ export function StatsGrid({ stats, isLoading }: StatsGridProps) {
     }
 
     return (
-        <div className='gap-3 sm:gap-4 grid grid-cols-2 lg:grid-cols-4'>
+        <div className='gap-3 sm:gap-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
             <StatCard
                 title='Total Balance'
                 value={stats.balance.value}
@@ -117,13 +113,6 @@ export function StatsGrid({ stats, isLoading }: StatsGridProps) {
                 change={stats.expenses.change}
                 isPositive={stats.expenses.isPositive}
                 icon='expense'
-            />
-            <StatCard
-                title='Savings'
-                value={stats.savings.value}
-                change={stats.savings.change}
-                isPositive={stats.savings.isPositive}
-                icon='savings'
             />
         </div>
     );

@@ -8,15 +8,15 @@ export const PLAN_DEFINITIONS: Record<PlanTier, PlanFeatures> = {
         historyDays: 7,
     },
     pro: {
-        maxTransactionsPerMonth: Infinity,
+        maxTransactionsPerMonth: 999999,
         naturalLanguage: true,
         csvExport: true,
-        historyDays: Infinity,
+        historyDays: 999999,
     },
     team: {
-        maxTransactionsPerMonth: Infinity,
+        maxTransactionsPerMonth: 999999,
         naturalLanguage: true,
         csvExport: true,
-        historyDays: Infinity,
+        historyDays: 999999,
     },
 };

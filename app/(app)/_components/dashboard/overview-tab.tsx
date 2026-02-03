@@ -175,7 +175,6 @@ export function OverviewTab() {
                         balance: { value: '$0.00', change: '0.0%', isPositive: true },
                         income: { value: '$0.00', change: '0.0%', isPositive: true },
                         expenses: { value: '$0.00', change: '0.0%', isPositive: true },
-                        savings: { value: '$0.00', change: '0.0%', isPositive: true },
                     }
                 }
                 isLoading={isLoadingOverview}

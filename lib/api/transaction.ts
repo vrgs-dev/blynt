@@ -19,7 +19,6 @@ export interface Stats {
     balance: { value: string; change: string; isPositive: boolean };
     income: { value: string; change: string; isPositive: boolean };
     expenses: { value: string; change: string; isPositive: boolean };
-    savings: { value: string; change: string; isPositive: boolean };
 }
 
 export interface GetOverviewResponse {

@@ -112,6 +112,10 @@ export function TransactionsTab() {
     return (
         <>
             <div className='space-y-4 sm:space-y-6'>
+                <h1 className='font-bold text-2xl sm:text-3xl md:text-4xl tracking-tight'>Transactions</h1>
+                <p className='mt-1 sm:mt-2 text-muted-foreground text-sm sm:text-base'>
+                    View and manage all your financial transactions
+                </p>
                 {/* Filters */}
                 <TransactionFilters filters={filters} onFilterChange={handleFilterChange} />
 

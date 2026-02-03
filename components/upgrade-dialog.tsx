@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
-type UpgradeReason = 'date_range' | 'transaction_limit' | 'feature';
+type UpgradeReason = 'date_range' | 'transaction_limit' | 'feature' | 'history_limit';
 
 interface UpgradeDialogProps {
     open: boolean;
@@ -53,6 +53,12 @@ const REASON_CONFIG: Record<
         description: 'Unlock advanced features with Pro',
         icon: Sparkles,
         gradient: 'from-cyan-500 via-teal-500 to-emerald-500',
+    },
+    history_limit: {
+        title: 'Unlock Full History',
+        description: 'Access your complete transaction history with Pro',
+        icon: Calendar,
+        gradient: 'from-teal-500 via-cyan-500 to-emerald-500',
     },
 };
 

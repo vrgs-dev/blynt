@@ -13,7 +13,6 @@ interface Stats {
     balance: { value: string; change: string; isPositive: boolean };
     income: { value: string; change: string; isPositive: boolean };
     expenses: { value: string; change: string; isPositive: boolean };
-    savings: { value: string; change: string; isPositive: boolean };
 }
 
 export async function GET(request: Request) {
@@ -119,12 +118,10 @@ export async function GET(request: Request) {
 
         const currentIncome = currentStats.totalIncome || 0;
         const currentExpenses = currentStats.totalExpenses || 0;
-        const currentSavings = currentIncome - currentExpenses;
         const currentBalance = currentIncome - currentExpenses;
 
         const previousIncome = previousStats.totalIncome || 0;
         const previousExpenses = previousStats.totalExpenses || 0;
-        const previousSavings = previousIncome - previousExpenses;
         const previousBalance = previousIncome - previousExpenses;
 
         // Calculate percentage changes
@@ -149,13 +146,6 @@ export async function GET(request: Request) {
                   ? 100
                   : 0;
 
-        const savingsChange =
-            previousSavings !== 0
-                ? ((currentSavings - previousSavings) / Math.abs(previousSavings)) * 100
-                : currentSavings > 0
-                  ? 100
-                  : 0;
-
         const stats: Stats = {
             balance: {
                 value: `$${formatCurrency(currentBalance)}`,
@@ -171,11 +161,6 @@ export async function GET(request: Request) {
                 value: `$${formatCurrency(currentExpenses)}`,
                 change: `${expensesChange >= 0 ? '+' : ''}${expensesChange.toFixed(1)}%`,
                 isPositive: expensesChange < 0, // Less expenses is positive
-            },
-            savings: {
-                value: `$${formatCurrency(currentSavings)}`,
-                change: `${savingsChange >= 0 ? '+' : ''}${savingsChange.toFixed(1)}%`,
-                isPositive: savingsChange >= 0,
             },
         };
 

@@ -16,6 +16,5 @@ export const dashboardTabsConfig: DashboardTabConfig[] = [
         value: 'calendar',
         label: 'Calendar',
         icon: CalendarIcon,
-        disabled: true,
     },
 ];
