@@ -14,7 +14,7 @@ import {
     Clock,
     Pencil,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import type { Transaction } from '@/types/transaction';
 import { Category } from '@/types/category';
 import { formatDate } from '@/lib/date';
@@ -134,15 +134,14 @@ function TransactionRow({ transaction, onEdit, onDelete }: TransactionRowProps) 
 
             {/* Amount & Actions */}
             <div className='flex items-center gap-2 sm:gap-3 shrink-0'>
-                <div className='text-right'>
+                <div className='min-w-0 text-right'>
                     <p
                         className={cn(
-                            'font-black text-base sm:text-lg tracking-tight',
-                            transaction.type === 'income' ? 'text-emerald-600' : 'text-foreground',
+                            'font-black text-sm sm:text-base md:text-lg truncate tracking-tight',
+                            transaction.type === 'income' ? 'text-emerald-600' : 'text-red-600',
                         )}
                     >
-                        {transaction.type === 'income' ? '+' : '-'}$
-                        {transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        ${formatCurrency(transaction.amount)}
                     </p>
                     {transaction.description && (
                         <p className='max-w-[100px] sm:max-w-[120px] text-[10px] text-muted-foreground truncate'>

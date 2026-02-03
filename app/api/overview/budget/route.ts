@@ -4,13 +4,16 @@ import { transactions } from '@/db/schema';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { getActiveSubscription } from '@/lib/subscriptions/getActiveSubscription';
+import { applyHistoryLimit } from '@/lib/billing/history';
+import { subDays } from 'date-fns';
 
 interface BudgetItem {
     category: string;
     spent: number;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await auth.api.getSession({
             headers: await headers(),
@@ -19,13 +22,40 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         const userId = session.user.id;
-        // Get current month date range
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-        const startDateStr = startOfMonth.toISOString().split('T')[0];
-        const endDateStr = endOfMonth.toISOString().split('T')[0];
+        // Get active subscription
+        const subscription = await getActiveSubscription(userId);
+        if (!subscription) {
+            return NextResponse.json({ error: 'No active subscription found' }, { status: 401 });
+        }
+
+        // Get query parameters for date range
+        const { searchParams } = new URL(request.url);
+        const startDateParam = searchParams.get('startDate');
+        const endDateParam = searchParams.get('endDate');
+
+        const now = new Date();
+
+        // Apply history limit based on subscription plan
+        const requestedStartDate = startDateParam
+            ? new Date(startDateParam)
+            : subDays(now, subscription.plan.features.historyDays);
+        const limitedStartDate = applyHistoryLimit(subscription, requestedStartDate);
+
+        let startDateStr: string;
+        let endDateStr: string;
+
+        if (startDateParam && endDateParam) {
+            // Use custom date range - apply history limit
+            startDateStr = limitedStartDate ? limitedStartDate.toISOString().split('T')[0] : startDateParam;
+            endDateStr = endDateParam;
+        } else {
+            // Default to history limit range
+            startDateStr = limitedStartDate
+                ? limitedStartDate.toISOString().split('T')[0]
+                : subDays(now, 30).toISOString().split('T')[0];
+            endDateStr = now.toISOString().split('T')[0];
+        }
 
         const categoryExpenses = await db
             .select({

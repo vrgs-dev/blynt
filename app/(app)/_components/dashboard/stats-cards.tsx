@@ -31,14 +31,14 @@ export function StatCard({ title, value, change, isPositive, icon = 'balance' }:
     const iconStyle = ICON_STYLES[icon];
 
     return (
-        <div className='bg-card border-2 border-border rounded-2xl p-4 sm:p-5 shadow-[3px_3px_0px_0px] shadow-foreground/5 hover:shadow-[4px_4px_0px_0px] hover:shadow-foreground/8 transition-all group'>
-            <div className='flex items-start justify-between gap-2 mb-3'>
-                <h3 className='text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide'>
+        <div className='group bg-card shadow-[3px_3px_0px_0px] shadow-foreground/5 hover:shadow-[4px_4px_0px_0px] hover:shadow-foreground/8 p-4 sm:p-5 border-2 border-border rounded-2xl transition-all'>
+            <div className='flex justify-between items-start gap-2 mb-3'>
+                <h3 className='font-semibold text-muted-foreground text-xs sm:text-sm truncate uppercase tracking-wide'>
                     {title}
                 </h3>
                 <div
                     className={cn(
-                        'p-1.5 sm:p-2 rounded-lg border-2 transition-transform group-hover:scale-110',
+                        'p-1.5 sm:p-2 border-2 rounded-lg group-hover:scale-110 transition-transform shrink-0',
                         iconStyle,
                     )}
                 >
@@ -46,23 +46,28 @@ export function StatCard({ title, value, change, isPositive, icon = 'balance' }:
                 </div>
             </div>
 
-            <p className='text-xl sm:text-2xl md:text-3xl font-black text-foreground tracking-tight mb-1'>{value}</p>
+            <p
+                className='mb-1 font-black text-foreground text-lg sm:text-xl md:text-2xl truncate tracking-tight'
+                title={value}
+            >
+                {value}
+            </p>
 
-            <div className='flex items-center gap-1.5'>
+            <div className='flex flex-wrap items-center gap-1.5'>
                 {isPositive ? (
-                    <TrendingUp className='size-3.5 text-emerald-500' />
+                    <TrendingUp className='size-3.5 text-emerald-500 shrink-0' />
                 ) : (
-                    <TrendingDown className='size-3.5 text-rose-500' />
+                    <TrendingDown className='size-3.5 text-rose-500 shrink-0' />
                 )}
                 <span
                     className={cn(
-                        'text-[10px] sm:text-xs font-bold',
+                        'font-bold text-[10px] sm:text-xs shrink-0',
                         isPositive ? 'text-emerald-600' : 'text-rose-600',
                     )}
                 >
                     {change}
                 </span>
-                <span className='text-[10px] sm:text-xs text-muted-foreground'>from last month</span>
+                <span className='text-[10px] text-muted-foreground sm:text-xs'>from last month</span>
             </div>
         </div>
     );
@@ -81,7 +86,7 @@ interface StatsGridProps {
 export function StatsGrid({ stats, isLoading }: StatsGridProps) {
     if (isLoading) {
         return (
-            <div className='grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4'>
+            <div className='gap-3 sm:gap-4 grid grid-cols-2 lg:grid-cols-4'>
                 <StatCardSkeleton />
                 <StatCardSkeleton />
                 <StatCardSkeleton />
@@ -91,7 +96,7 @@ export function StatsGrid({ stats, isLoading }: StatsGridProps) {
     }
 
     return (
-        <div className='grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4'>
+        <div className='gap-3 sm:gap-4 grid grid-cols-2 lg:grid-cols-4'>
             <StatCard
                 title='Total Balance'
                 value={stats.balance.value}
@@ -126,18 +131,18 @@ export function StatsGrid({ stats, isLoading }: StatsGridProps) {
 
 function StatCardSkeleton() {
     return (
-        <div className='bg-card border-2 border-border rounded-2xl p-4 sm:p-5 shadow-[3px_3px_0px_0px] shadow-foreground/5'>
-            <div className='flex items-start justify-between gap-2 mb-3'>
-                <Skeleton className='h-3.5 sm:h-4 w-24 sm:w-28' />
-                <Skeleton className='size-8 sm:size-9 rounded-lg' />
+        <div className='bg-card shadow-[3px_3px_0px_0px] shadow-foreground/5 p-4 sm:p-5 border-2 border-border rounded-2xl'>
+            <div className='flex justify-between items-start gap-2 mb-3'>
+                <Skeleton className='w-24 sm:w-28 h-3.5 sm:h-4' />
+                <Skeleton className='rounded-lg size-8 sm:size-9' />
             </div>
 
-            <Skeleton className='h-7 sm:h-9 md:h-10 w-28 sm:w-36 md:w-40 mb-1' />
+            <Skeleton className='mb-1 w-28 sm:w-36 md:w-40 h-7 sm:h-9 md:h-10' />
 
             <div className='flex items-center gap-1.5'>
-                <Skeleton className='size-3.5 rounded-full' />
-                <Skeleton className='h-3 sm:h-3.5 w-12 sm:w-14' />
-                <Skeleton className='h-3 sm:h-3.5 w-20 sm:w-24' />
+                <Skeleton className='rounded-full size-3.5' />
+                <Skeleton className='w-12 sm:w-14 h-3 sm:h-3.5' />
+                <Skeleton className='w-20 sm:w-24 h-3 sm:h-3.5' />
             </div>
         </div>
     );

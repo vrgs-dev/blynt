@@ -4,6 +4,10 @@ import { transactions } from '@/db/schema';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { getActiveSubscription } from '@/lib/subscriptions/getActiveSubscription';
+import { applyHistoryLimit } from '@/lib/billing/history';
+import { subDays } from 'date-fns';
+import { formatCurrency } from '@/lib/utils';
 
 interface Stats {
     balance: { value: string; change: string; isPositive: boolean };
@@ -12,7 +16,7 @@ interface Stats {
     savings: { value: string; change: string; isPositive: boolean };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await auth.api.getSession({
             headers: await headers(),
@@ -21,20 +25,68 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         const userId = session.user.id;
+
+        // Get active subscription
+        const subscription = await getActiveSubscription(userId);
+        if (!subscription) {
+            return NextResponse.json({ error: 'No active subscription found' }, { status: 401 });
+        }
+
+        // Get query parameters for date range
+        const { searchParams } = new URL(request.url);
+        const startDateParam = searchParams.get('startDate');
+        const endDateParam = searchParams.get('endDate');
+
         const now = new Date();
 
-        // Current month range
-        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        // Apply history limit based on subscription plan
+        const requestedStartDate = startDateParam
+            ? new Date(startDateParam)
+            : subDays(now, subscription.plan.features.historyDays);
+        const limitedStartDate = applyHistoryLimit(subscription, requestedStartDate);
 
-        // Previous month range
-        const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+        // Use provided dates or default to current/previous month
+        let currentStartStr: string;
+        let currentEndStr: string;
+        let previousStartStr: string;
+        let previousEndStr: string;
 
-        const currentStartStr = currentMonthStart.toISOString().split('T')[0];
-        const currentEndStr = currentMonthEnd.toISOString().split('T')[0];
-        const previousStartStr = previousMonthStart.toISOString().split('T')[0];
-        const previousEndStr = previousMonthEnd.toISOString().split('T')[0];
+        if (startDateParam && endDateParam) {
+            // User selected a custom range - apply history limit
+            currentStartStr = limitedStartDate ? limitedStartDate.toISOString().split('T')[0] : startDateParam;
+            currentEndStr = endDateParam;
+
+            // Calculate previous period of same length
+            const start = new Date(currentStartStr);
+            const end = new Date(endDateParam);
+            const daysDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+            const previousStart = new Date(start);
+            previousStart.setDate(previousStart.getDate() - daysDiff - 1);
+            const previousEnd = new Date(start);
+            previousEnd.setDate(previousEnd.getDate() - 1);
+
+            previousStartStr = previousStart.toISOString().split('T')[0];
+            previousEndStr = previousEnd.toISOString().split('T')[0];
+        } else {
+            // Default to history limit range
+            currentStartStr = limitedStartDate
+                ? limitedStartDate.toISOString().split('T')[0]
+                : subDays(now, 30).toISOString().split('T')[0];
+            currentEndStr = now.toISOString().split('T')[0];
+
+            // Calculate previous period of same length
+            const start = new Date(currentStartStr);
+            const daysDiff = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+            const previousStart = new Date(start);
+            previousStart.setDate(previousStart.getDate() - daysDiff - 1);
+            const previousEnd = new Date(start);
+            previousEnd.setDate(previousEnd.getDate() - 1);
+
+            previousStartStr = previousStart.toISOString().split('T')[0];
+            previousEndStr = previousEnd.toISOString().split('T')[0];
+        }
 
         const [currentStats] = await db
             .select({
@@ -67,13 +119,13 @@ export async function GET() {
 
         const currentIncome = currentStats.totalIncome || 0;
         const currentExpenses = currentStats.totalExpenses || 0;
-        const currentBalance = currentIncome - currentExpenses;
         const currentSavings = currentIncome - currentExpenses;
+        const currentBalance = currentIncome - currentExpenses;
 
         const previousIncome = previousStats.totalIncome || 0;
         const previousExpenses = previousStats.totalExpenses || 0;
-        const previousBalance = previousIncome - previousExpenses;
         const previousSavings = previousIncome - previousExpenses;
+        const previousBalance = previousIncome - previousExpenses;
 
         // Calculate percentage changes
         const balanceChange =
@@ -106,28 +158,45 @@ export async function GET() {
 
         const stats: Stats = {
             balance: {
-                value: `$${currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                value: `$${formatCurrency(currentBalance)}`,
                 change: `${balanceChange >= 0 ? '+' : ''}${balanceChange.toFixed(1)}%`,
                 isPositive: balanceChange >= 0,
             },
             income: {
-                value: `$${currentIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                value: `$${formatCurrency(currentIncome)}`,
                 change: `${incomeChange >= 0 ? '+' : ''}${incomeChange.toFixed(1)}%`,
                 isPositive: incomeChange >= 0,
             },
             expenses: {
-                value: `$${currentExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                value: `$${formatCurrency(currentExpenses)}`,
                 change: `${expensesChange >= 0 ? '+' : ''}${expensesChange.toFixed(1)}%`,
                 isPositive: expensesChange < 0, // Less expenses is positive
             },
             savings: {
-                value: `$${currentSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                value: `$${formatCurrency(currentSavings)}`,
                 change: `${savingsChange >= 0 ? '+' : ''}${savingsChange.toFixed(1)}%`,
                 isPositive: savingsChange >= 0,
             },
         };
 
-        return NextResponse.json({ stats });
+        // Check if the requested range was limited
+        const wasLimited = startDateParam && limitedStartDate && new Date(startDateParam) < limitedStartDate;
+        const requestedDays =
+            startDateParam && endDateParam
+                ? Math.ceil(
+                      (new Date(endDateParam).getTime() - new Date(startDateParam).getTime()) / (1000 * 60 * 60 * 24),
+                  )
+                : null;
+
+        return NextResponse.json({
+            stats,
+            meta: {
+                historyDays: subscription.plan.features.historyDays,
+                wasLimited,
+                requestedDays,
+                appliedStartDate: currentStartStr,
+            },
+        });
     } catch (error) {
         console.error('[API Error]', error instanceof Error ? error.message : 'Unknown error');
         return NextResponse.json({ error: 'Something went wrong, please try again' }, { status: 500 });

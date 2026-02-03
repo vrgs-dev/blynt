@@ -31,16 +31,16 @@ When the user mentions temporal references, interpret them as follows:
 
 # Category Inference Guidelines
 Automatically categorize transactions based on context:
-- Food/drinks → "food" (restaurante, almuerzo, café, comida, desayuno)
-- Transportation → "transport" (uber, taxi, gasolina, bus, metro)
-- Entertainment → "entertainment" (cine, concierto, netflix, spotify)
-- Salary/wages → "salary" (salario, pago, nómina, sueldo)
-- Bills/utilities → "bills" (luz, agua, internet, teléfono, arriendo, renta)
-- Shopping → "shopping" (ropa, zapatos, amazon, tienda)
-- Groceries → "groceries" (supermercado, mercado, despensa)
-- Health → "health" (farmacia, doctor, medicina, hospital)
-- Education → "education" (curso, libro, matrícula)
-- Other → "other" (anything that doesn't fit above)
+- Food/drinks → "Food" (restaurante, almuerzo, café, comida, desayuno)
+- Transportation → "Transport" (uber, taxi, gasolina, bus, metro)
+- Entertainment → "Entertainment" (cine, concierto, netflix, spotify)
+- Salary/wages → "Salary" (salario, pago, nómina, sueldo)
+- Bills/utilities → "Utilities" (luz, agua, internet, teléfono, arriendo, renta)
+- Shopping → "Shopping" (ropa, zapatos, amazon, tienda)
+- Groceries → "Groceries" (supermercado, mercado, despensa)
+- Health → "Healthcare" (farmacia, doctor, medicina, hospital)
+- Education → "Education" (curso, libro, matrícula)
+- Other → "Other" (anything that doesn't fit above)
 
 # Amount Parsing
 Handle various number formats:
@@ -72,30 +72,30 @@ For MULTIPLE transactions, return:
 **Single Transaction:**
 Input: "Gasté $50 en almuerzo hoy"
 Output:
-{"transaction":{"type":"expense","amount":50,"currency":"COP","category":"food","date":"2025-01-21","description":"Almuerzo"}}
+{"transaction":{"type":"expense","amount":50,"currency":"COP","category":"Food","date":"2025-01-21","description":"Almuerzo"}}
 
 **Multiple Transactions (same message):**
 Input: "Hoy gasté $50 en almuerzo y $20 en uber"
 Output:
-{"transactions":[{"type":"expense","amount":50,"currency":"COP","category":"food","date":"2025-01-21","description":"Almuerzo"},{"type":"expense","amount":20,"currency":"COP","category":"transport","date":"2025-01-21","description":"Uber"}]}
+{"transactions":[{"type":"expense","amount":50,"currency":"COP","category":"Food","date":"2025-01-21","description":"Almuerzo"},{"type":"expense","amount":20,"currency":"COP","category":"Transport","date":"2025-01-21","description":"Uber"}]}
 
 
 **Multiple Transactions (list format):**
 Input: "Ayer: supermercado 100k, farmacia 30k, gasolina 50 mil"
 Output:
-{"transactions":[{"type":"expense","amount":100000,"currency":"COP","category":"groceries","date":"2025-01-20","description":"Supermercado"},{"type":"expense","amount":30000,"currency":"COP","category":"health","date":"2025-01-20","description":"Farmacia"},{"type":"expense","amount":50000,"currency":"COP","category":"transport","date":"2025-01-20","description":"Gasolina"}]}
+{"transactions":[{"type":"expense","amount":100000,"currency":"COP","category":"Groceries","date":"2025-01-20","description":"Supermercado"},{"type":"expense","amount":30000,"currency":"COP","category":"Healthcare","date":"2025-01-20","description":"Farmacia"},{"type":"expense","amount":50000,"currency":"COP","category":"Transport","date":"2025-01-20","description":"Gasolina"}]}
 
 
 **Mixed types:**
 Input: "Recibí pago de $3000 y gasté $500 en compras"
 Output:
-{"transactions":[{"type":"income","amount":3000,"currency":"USD","category":"salary","date":"2025-01-21","description":"Pago recibido"},{"type":"expense","amount":500,"currency":"USD","category":"shopping","date":"2025-01-21","description":"Compras"}]}
+{"transactions":[{"type":"income","amount":3000,"currency":"USD","category":"Salary","date":"2025-01-21","description":"Pago recibido"},{"type":"expense","amount":500,"currency":"USD","category":"Shopping","date":"2025-01-21","description":"Compras"}]}
 
 
 **Different dates:**
 Input: "Lunes gasté 50k en almuerzo, hoy 30k en taxi"
 Output:
-{"transactions":[{"type":"expense","amount":50000,"currency":"COP","category":"food","date":"2025-01-20","description":"Almuerzo"},{"type":"expense","amount":30000,"currency":"COP","category":"transport","date":"2025-01-21","description":"Taxi"}]}
+{"transactions":[{"type":"expense","amount":50000,"currency":"COP","category":"Food","date":"2025-01-20","description":"Almuerzo"},{"type":"expense","amount":30000,"currency":"COP","category":"Transport","date":"2025-01-21","description":"Taxi"}]}
 
 
 # Rules

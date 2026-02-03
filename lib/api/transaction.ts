@@ -24,6 +24,12 @@ export interface Stats {
 
 export interface GetOverviewResponse {
     stats: Stats;
+    meta?: {
+        historyDays: number;
+        wasLimited: boolean;
+        requestedDays: number | null;
+        appliedStartDate: string;
+    };
 }
 
 export async function createTransaction(data: CreateTransactionRequest) {
@@ -36,13 +42,18 @@ export async function getTransactions(filters: TransactionFilters) {
     return response.data;
 }
 
-export async function getBudget() {
-    const response = await api.get<GetBudgetResponse>('/overview/budget');
+export interface DateRangeParams {
+    startDate?: string;
+    endDate?: string;
+}
+
+export async function getBudget(params?: DateRangeParams) {
+    const response = await api.get<GetBudgetResponse>('/overview/budget', { params });
     return response.data;
 }
 
-export async function getOverview() {
-    const response = await api.get<GetOverviewResponse>('/overview');
+export async function getOverview(params?: DateRangeParams) {
+    const response = await api.get<GetOverviewResponse>('/overview', { params });
     return response.data;
 }
 

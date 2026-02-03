@@ -7,6 +7,7 @@ import type { BudgetItem } from './types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PieChartIcon, TrendingUp, BarChart3 } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { formatCurrency, formatCurrencyCompact } from '@/lib/utils';
 
 interface BudgetOverviewProps {
     budgets: BudgetItem[];
@@ -164,12 +165,9 @@ export function BudgetOverview({ budgets, title = 'Expenses by Category', isLoad
                                                         <tspan
                                                             x={viewBox.cx}
                                                             y={viewBox.cy}
-                                                            className='fill-foreground font-black text-2xl lg:text-3xl'
+                                                            className='fill-foreground font-black text-xl lg:text-2xl'
                                                         >
-                                                            $
-                                                            {totalSpent.toLocaleString(undefined, {
-                                                                maximumFractionDigits: 0,
-                                                            })}
+                                                            ${formatCurrencyCompact(totalSpent)}
                                                         </tspan>
                                                         <tspan
                                                             x={viewBox.cx}
@@ -218,16 +216,15 @@ export function BudgetOverview({ budgets, title = 'Expenses by Category', isLoad
                                             {item.categoryName}
                                         </span>
                                     </div>
-                                    <div className='flex items-center gap-3 shrink-0'>
+                                    <div className='flex items-center gap-2 sm:gap-3 shrink-0'>
                                         <span className='font-medium tabular-nums text-[10px] text-muted-foreground sm:text-xs'>
                                             {percentage.toFixed(1)}%
                                         </span>
-                                        <span className='min-w-[60px] font-bold tabular-nums text-foreground text-xs sm:text-sm text-right'>
-                                            $
-                                            {item.spent.toLocaleString(undefined, {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            })}
+                                        <span
+                                            className='min-w-[70px] sm:min-w-[80px] font-bold tabular-nums text-foreground text-xs sm:text-sm text-right truncate'
+                                            title={`$${formatCurrency(item.spent)}`}
+                                        >
+                                            ${formatCurrency(item.spent)}
                                         </span>
                                     </div>
                                 </div>

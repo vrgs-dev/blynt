@@ -11,6 +11,7 @@ import { transactions } from '@/db/schema';
 import { getActiveSubscription } from '@/lib/subscriptions/getActiveSubscription';
 import { canCreateTransactions } from '@/lib/billing/can';
 import { applyHistoryLimit } from '@/lib/billing/history';
+import { subDays } from 'date-fns';
 
 export const transactionsInputSchema = z.object({
     transactions: z.array(transactionSchema).min(1),
@@ -53,7 +54,12 @@ export async function GET(request: NextRequest) {
         const paramsObject = Object.fromEntries(searchParams.entries());
         const filters = transactionFiltersSchema.parse(paramsObject);
 
-        const startDate = applyHistoryLimit(subscription, filters.startDate ? new Date(filters.startDate) : undefined);
+        const startDate = applyHistoryLimit(
+            subscription,
+            filters.startDate
+                ? new Date(filters.startDate)
+                : subDays(new Date(), subscription.plan.features.historyDays),
+        );
 
         const conditions = [eq(transactions.userId, userId)];
         if (startDate) {

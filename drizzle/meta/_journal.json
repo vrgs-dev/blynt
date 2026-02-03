@@ -8,6 +8,20 @@
       "when": 1769996783096,
       "tag": "20260202014623_mysterious_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770077906130,
+      "tag": "20260203001826_first_black_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770082184141,
+      "tag": "20260203012944_nervous_puck",
+      "breakpoints": true
     }
   ]
 }

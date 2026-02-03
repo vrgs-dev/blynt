@@ -7,6 +7,7 @@ import {
     getOverview,
     updateTransaction,
     deleteTransaction,
+    DateRangeParams,
 } from '../transaction';
 import type { Transaction } from '@/types/transaction';
 
@@ -49,16 +50,16 @@ export function useDeleteTransaction(options?: UseDeleteTransactionOptions) {
     });
 }
 
-export function useBudget() {
+export function useBudget(params?: DateRangeParams) {
     return useQuery({
-        queryKey: ['budget'],
-        queryFn: () => getBudget(),
+        queryKey: ['budget', params?.startDate, params?.endDate],
+        queryFn: () => getBudget(params),
     });
 }
 
-export function useOverview() {
+export function useOverview(params?: DateRangeParams) {
     return useQuery({
-        queryKey: ['overview'],
-        queryFn: () => getOverview(),
+        queryKey: ['overview', params?.startDate, params?.endDate],
+        queryFn: () => getOverview(params),
     });
 }

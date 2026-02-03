@@ -11,15 +11,20 @@ import { TransactionDeleteModal } from './transaction-delete-modal';
 import type { TransactionFilters as Filters, Transaction } from '@/types/transaction';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { subDays } from 'date-fns';
 
 const ITEMS_PER_PAGE = 10;
 
 export function TransactionsTab() {
+    const now = new Date().toISOString().split('T')[0];
+    const startDate = subDays(now, 7).toISOString().split('T')[0];
+
     const queryClient = useQueryClient();
     const [filters, setFilters] = useState<Filters>({
         limit: ITEMS_PER_PAGE,
         offset: 0,
-        startDate: new Date().toISOString().split('T')[0],
+        startDate,
+        endDate: now,
     });
 
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
